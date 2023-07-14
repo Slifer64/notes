@@ -1,0 +1,179 @@
+name: Dockerfiles
+# Test and push dockerfiles when they change.
+# Test for pull request, push dockerfiles when merged into main.
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: 0 0 1 * *
+  push:
+    branches:
+      - main
+    paths:
+      - '**.Dockerfile'
+      - .github/workflows/docker.yml
+  pull_request:
+  workflow_dispatch:
+
+# Cancel in-progress funs of the same workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+          cache: pip
+      - name: Verify dockerfiles
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          ./generate.py
+          git diff --exit-code
+
+  docker:
+    needs: generate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ros
+            tag: noetic
+            target: base
+          - label: ros
+            tag: noetic
+            target: dev
+          - label: ros
+            tag: noetic
+            target: full
+          - label: ros
+            tag: noetic
+            target: gazebo
+          - label: ros2
+            tag: iron
+            target: base
+          - label: ros2
+            tag: iron
+            target: dev
+          - label: ros2
+            tag: iron
+            target: full
+          - label: ros2
+            tag: iron
+            target: gazebo
+          - label: ros2
+            tag: iron-cuda
+            target: base
+          - label: ros2
+            tag: iron-cuda
+            target: dev
+          - label: ros2
+            tag: iron-cuda
+            target: full
+          - label: ros2
+            tag: iron-cuda
+            target: gazebo-nvidia
+          - label: ros2
+            tag: humble
+            target: base
+          - label: ros2
+            tag: humble
+            target: dev
+          - label: ros2
+            tag: humble
+            target: full
+          - label: ros2
+            tag: humble
+            target: gazebo
+          - label: ros2
+            tag: humble-cuda
+            target: base
+          - label: ros2
+            tag: humble-cuda
+            target: dev
+          - label: ros2
+            tag: humble-cuda
+            target: full
+          - label: ros2
+            tag: humble-cuda
+            target: gazebo-nvidia
+          - label: gazebo
+            tag: gazebo11
+            target: base
+          - label: gazebo
+            tag: gazebo11
+            target: dev
+          - label: gazebo
+            tag: gazebo11
+            target: nvidia
+          - label: ignition
+            tag: fortress
+            target: base
+          - label: ignition
+            tag: fortress
+            target: dev
+          - label: ignition
+            tag: fortress
+            target: nvidia
+          - label: ignition
+            tag: citadel
+            target: base
+          - label: ignition
+            tag: citadel
+            target: dev
+          - label: ignition
+            tag: citadel
+            target: nvidia
+          - label: gz
+            tag: garden
+            target: base
+          - label: gz
+            tag: garden
+            target: dev
+          - label: gz
+            tag: garden
+            target: nvidia
+          - label: gz
+            tag: garden
+            target: nvidia-dev
+    steps:
+      - name: Set current date
+        id: date
+        run: |
+          echo "date=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - name: Use current date
+        run: |
+          echo "Current date is ${{ steps.date.outputs.date }}"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: althack
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: ${{ github.ref == 'refs/heads/main' }}
+          file: ${{ matrix.label }}/${{ matrix.tag}}.Dockerfile
+          target: ${{ matrix.target }}
+          tags: |
+            althack/${{ matrix.label }}:${{ matrix.tag }}-${{ matrix.target }}
+            althack/${{ matrix.label }}:${{ matrix.tag }}-${{ matrix.target }}-${{ steps.date.outputs.date }}
+
+  complete:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check
+        run: echo "Completed successfully!"

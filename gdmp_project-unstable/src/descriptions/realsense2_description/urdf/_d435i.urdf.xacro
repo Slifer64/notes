@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+License: Apache 2.0. See LICENSE file in root directory.
+Copyright(c) 2020 Intel Corporation. All Rights Reserved
+
+This is the URDF model for the Intel RealSense 435i camera, in it's
+aluminum peripherial evaluation case.
+-->
+
+<robot name="sensor_d435i" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  INCLUDES  ========
+-->
+
+<!--
+=========  PARAMS  ========
+- parent                   : the parent link
+- *origin                  : origin block of the camera's base w.r.t. the parent link
+- name                     : the prefix for all constructed links/joints                  (default=camera)
+- use_nominal_extrinsics   : flag whether to use nominal extrinsics or not                (default=false)
+-->
+
+<!--
+=========  LINKS  ========
+- {name}__bottom_screw_frame       :  the camera's link that is attached to the {parent}
+- {name}_color_optical_frame       :  the frame of the color optical sensor
+- {name}_depth_optical_frame       :  the frame of the depth optical sensor
+-->
+
+
+  <xacro:include filename="$(find descriptions)/realsense2_description/urdf/_d435.urdf.xacro"/>
+  <xacro:include filename="$(find descriptions)/realsense2_description/urdf/_d435i_imu_modules.urdf.xacro"/>
+
+  <xacro:macro name="sensor_d435i" params="parent *origin name:=camera use_nominal_extrinsics:=false">
+    <xacro:sensor_d435 parent="${parent}" name="${name}" use_nominal_extrinsics="${use_nominal_extrinsics}">
+      <xacro:insert_block name="origin" />
+    </xacro:sensor_d435>
+    <xacro:d435i_imu_modules name="${name}" use_nominal_extrinsics="${use_nominal_extrinsics}"/>
+  </xacro:macro>
+
+
+</robot>
+

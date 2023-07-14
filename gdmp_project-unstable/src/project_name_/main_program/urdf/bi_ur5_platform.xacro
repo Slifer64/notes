@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<robot name="robot_ur5_kol" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ur5 -->
+<!-- <xacro:include filename="$(find ur_description)/urdf/ur5.urdf.xacro" /> -->
+<xacro:include filename="$(find ur_e_description)/urdf/ur5e.urdf.xacro" />
+
+<xacro:include filename="$(find descriptions)/robotic_platform_description/urdf/robotic_platform.urdf.xacro" />
+
+<!-- <xacro:include filename="$(find descriptions)/realsense2_description/urdf/_d435i.urdf.xacro"/> -->
+
+<xacro:arg name="right_robot" default="false" />
+<xacro:arg name="left_robot" default="true" />
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+<xacro:robotic_platform parent="world">
+    <origin xyz="0 0 0.8" rpy="0 0 0"/>
+</xacro:robotic_platform>
+
+<xacro:if value="$(arg right_robot)">
+
+    <!-- =============  ur5 right ============= -->
+    <xacro:ur5e_robot prefix="ur5_right_" joint_limited="false"/>
+
+    <joint name="ur5_right_base_joint" type="fixed">
+    <parent link="robotic_platform_right_mount" />
+    <child link = "ur5_right_base_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0" />
+    </joint>
+
+</xacro:if>
+    
+
+<xacro:if value="$(arg left_robot)">
+
+    <!-- =============  ur5 left ============= -->
+    <xacro:ur5e_robot prefix="ur5_left_" joint_limited="false"/>
+
+    <joint name="ur5_left_base_joint" type="fixed">
+    <parent link="robotic_platform_left_mount" />
+    <child link = "ur5_left_base_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0" />
+    </joint>
+
+
+    <!-- ===============   phri tool  =================-->
+    <link name="phri_tool">
+        <visual>
+            <geometry>
+                <mesh filename="package://main_program/meshes/phri_handle.dae"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="phriTool_ati_joint" type="fixed">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <parent link="ur5_left_tool0"/>
+        <child link="phri_tool"/>
+    </joint>
+
+
+
+    <!-- ===============  ee link  =================-->
+    <link name="left_ee_link"/>
+
+    <joint name="ur5_left_ee_joint" type="fixed">
+        <origin xyz="0 0 0.1206" rpy="0 0 0"/>
+        <parent link="ur5_left_tool0"/>
+        <child link="left_ee_link"/>
+    </joint>
+
+</xacro:if>
+
+</robot>

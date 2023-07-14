@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="lwr4p_xtion_ur5_r85gripper_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- lwr4p, rs_d435i -->
+<xacro:include filename="$(find descriptions)/robots/lwr4p_asus_xtion_pro.urdf.xacro" />
+
+<!-- ur5, r85_gripper -->
+<xacro:include filename="$(find descriptions)/robots/ur5e_robotiq85gripper.urdf.xacro" />
+
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+<xacro:ur5e_r85gripper_robot parent="world" prefix="ur5" ee_frame_pos="0 0 0.11">
+  <origin xyz="0 0 0" rpy="0 0 0" />
+</xacro:ur5e_r85gripper_robot>
+
+<xacro:lwr4p_asus_xtion_pro_robot parent="ur5_base_link" prefix="lwr4pCam">
+    <origin xyz="-1.1 0 0" rpy="0 0 0" />
+</xacro:lwr4p_asus_xtion_pro_robot>
+
+
+</robot>

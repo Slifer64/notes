@@ -1,0 +1,6 @@
+# =======  ROBOT PARAMS  =========
+
+pub_robot_state_flag: true
+pub_rate_ms: 33 # ms
+
+urdf_prefix: "r85_"

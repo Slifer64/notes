@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>gmp_model</name>
+  <version>0.0.0</version>
+  <description>gmp_model</description>
+
+  <maintainer email="antosidi646@gmail.com">Antonis Sidiropoulos</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <run_depend>roscpp</run_depend>
+
+  <build_depend>roslib</build_depend>
+  <run_depend>roslib</run_depend>
+
+  <build_depend>gmp_lib</build_depend>
+  <run_depend>gmp_lib</run_depend>
+
+  <build_depend>io_lib</build_depend>
+  <run_depend>io_lib</run_depend>
+
+  <build_depend>math_lib</build_depend>
+  <run_depend>math_lib</run_depend>
+
+  <build_depend>thread_lib</build_depend>
+  <run_depend>thread_lib</run_depend>
+
+
+  <export></export>
+</package>

@@ -1,0 +1,30 @@
+controllers:
+  [
+    # ======  Main Controller  =======
+    {
+      name: "Main Controller",
+      publish_topic: "main_controller_ros_actions",
+      actions:
+        [
+          {id: 0, name: "SET_MODE_IDLE",              btn_label: "Idle"},
+          {id: 1, name: "SET_MODE_FREEDRIVE",         btn_label: "Freedrive"},
+          {id: 2, name: "TRIGGER_EMERGENCY_STOP",     btn_label: "Emergency stop",  stylesheet: "color:rgb(255,0,0); background-color:rgba(210, 210, 210, 100);"},
+          {id: 3, name: "GOTO_START_POSE",            btn_label: "Goto start pose"},
+          {id: 4, name: "SET_CURRENT_POSE_AS_START",  btn_label: "Set current pose as start"},
+        ]
+    },
+
+    # ======  Train Controller  =======
+    {
+      name: "Train Controller",
+      publish_topic: "train_controller_ros_actions",
+      actions:
+        [
+          {id: 0, name: "EXEC_TRAJ",        btn_label: "exec train trajectory"},
+          {id: 1, name: "EXEC_REVESE_TRAJ", btn_label: "exec reverse train trajectory"},
+          {id: 2, name: "START_TRAIN",      btn_label: "start training"},
+          {id: 3, name: "STOP_TRAIN",       btn_label: "stop training"},
+        ]
+    }
+
+  ]

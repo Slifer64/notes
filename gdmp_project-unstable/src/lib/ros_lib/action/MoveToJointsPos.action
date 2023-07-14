@@ -1,0 +1,12 @@
+#goal definition
+float64[] target_joints_pos
+float64 duration
+---
+#result definition
+bool success
+string msg 
+---
+#feedback
+bool finished
+float64 progress
+float64[] current_joint_pos

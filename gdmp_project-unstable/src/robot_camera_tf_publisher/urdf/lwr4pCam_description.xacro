@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="ur5_lwr4p_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ur5, rs_d435i -->
+<xacro:include filename="$(find descriptions)/robots/lwr4p_adapter_rs435i.urdf.xacro" />
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+
+<link name="main_base_link"/>
+<joint name="world_mainbase_joint" type="fixed">
+    <origin xyz="0.55 0 0" rpy="0 0 0" />
+    <parent link="world"/>
+    <child link="main_base_link"/>
+</joint>
+
+<!-- =============  Robots  ============= -->
+<xacro:lwr4p_adapter_rs435i_robot parent="main_base_link" prefix="lwr4pCam">
+    <origin xyz="-0.55 0 0" rpy="0 0 0" /> <!-- robot_base_origin -->
+</xacro:lwr4p_adapter_rs435i_robot>
+
+</robot>

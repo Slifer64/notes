@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="use_sim" default="false" />
+
+    <arg name="robot" default="left" />  <!-- "left", "right", "both" -->
+        
+
+    <param name="a" value="$(eval {x: '*'*x for x in range(10) if x % 2 == 0})" />
+
+    <!-- <arg name="a" default="5" />
+
+    <param name="b" value="5" unless="$(eval arg('a') == 6 or arg('a') == 4)" /> -->
+
+
+    
+</launch>

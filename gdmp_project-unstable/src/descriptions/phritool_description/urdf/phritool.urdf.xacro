@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  PARAMS  ========
+- parent       : the parent link
+- prefix       : the prefix for all constructed links/joints     (default='phritool')
+- *origin      : pose w.r.t. the parent link
+-->
+
+
+<!--
+=========  LINKS  ========
+- ${prefix}_base         :  located at the base (bottom) of the tool
+- ${prefix}_handle_tip   :  located at the tip of the tool
+-->
+
+<xacro:macro name="phritool" 
+    params="
+        parent
+        prefix:='phritool' 
+        *origin 
+    ">
+
+    <!-- ===============   phri tool  =================-->
+    <link name="${prefix}_base">
+        <visual>
+            <geometry>
+                <mesh filename="package://descriptions/phritool_description/meshes/phri_handle.dae"/>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="${parent}_${prefix}_base_joint" type="fixed">
+        <xacro:insert_block name="robot_base_origin" />
+        <parent link="${parent}"/>
+        <child link="${prefix}_base"/>
+    </joint>
+
+    <!-- =========  phritool tip link  =========-->
+
+    <link name="${prefix}_handle_tip"/>
+
+    <joint name="${prefix}_base_handle_tip_joint" type="fixed">
+        <origin xyz="0.0 0.0 0.1207" rpy="0.0 0.0 0" />
+        <parent link="${prefix}_base"/>
+        <child link="${prefix}_handle_tip"/>
+    </joint>
+
+</xacro:macro>
+
+</robot>

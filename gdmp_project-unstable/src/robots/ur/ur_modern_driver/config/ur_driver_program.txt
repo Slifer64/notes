@@ -1,0 +1,275 @@
+def driverProg():
+
+	global MULT_ = <MULT>
+
+	global ctrl_cycle = 0.002
+
+	global servo_gain = 1000
+
+	global servo_lookahead_time = 0.02
+
+	global keepalive = True
+
+	ip_addr = <HOST_IP> # "10.0.0.3"
+	reverse_port_ = <REVERSE_PORT> # 8080
+	sock_fd_ = "socket_1"
+	sock_read_timeout = 0.02 # seconds
+
+	global MAX_NO_CMD_COUNT = 4
+	global NO_CMD_COUNT = 0
+	global RECEIVED_CMD = False
+
+	global GLOBAL_MSG = ""
+
+	# ====== define the states  ======
+	global UNASSIGNED_STATE = 0
+
+	global JOINT_POS_CTRL = 1
+	global JOINT_VEL_CTRL = 2
+	global CART_POS_CTRL = 3
+	global CART_VEL_CTRL = 4
+	global FREEDRIVE = 5
+	global IDLE_MODE = 6
+
+	global BIAS_FT_SENSOR = 7
+	global TERMINATE = 8
+
+	global CUSTOM_INPUT = 0
+
+	# ========  Initialize  =========
+
+	global servoj_state = IDLE_MODE
+	global cmd_state = IDLE_MODE
+	global cmd_arg1 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+	global cmd_arg2 = 0.0
+	global cmd_arg3 = 0.0
+
+	global SERVOJ_STATE_MSG = "IDLE_MODE"
+
+	# ========  Function: Set commanded values  ==========
+
+	def setState(state):
+		if (state >= JOINT_POS_CTRL) and (state <= IDLE_MODE):
+			enter_critical
+			cmd_state = state
+			exit_critical
+		end
+	end
+
+	def setCmd(arg1, arg2, arg3):
+		enter_critical
+			cmd_arg1 = arg1
+			cmd_arg2 = arg2
+			cmd_arg3 = arg3
+			RECEIVED_CMD = True
+		exit_critical
+	end
+
+	# ========  Thread: Send robot state  ==========
+
+	thread sendDataThread():
+
+		while (True):
+
+			jpos = get_actual_joint_positions()
+			jvel = get_actual_joint_speeds()
+
+			tcp_pose = get_actual_tcp_pose()
+			tcp_vel = get_actual_tcp_speed()
+
+			jtorq = get_joint_torques()
+			tcp_wrench = get_tcp_force()
+
+			# pose_tcp_flange = pose_inv(get_tcp_offset())
+			# flange_wrench = wrench_trans(pose_tcp_flange, tcp_wrench)
+
+			# pose_base_tcp = get_actual_tcp_pose()
+			# pose_base_flange = pose_trans(pose_base_tcp, pose_tcp_flange)
+
+			#textmsg(to_str(MULT_ * 0.123456789)) # up to 6 decimals can be printed
+
+			#jtemp = [get_joint_temp(0), get_joint_temp(1), get_joint_temp(2), get_joint_temp(3), get_joint_temp(4), get_joint_temp(5)]
+
+			digital_in_flags = [binary_list_to_integer([get_digital_in(0), get_digital_in(1), get_digital_in(2), get_digital_in(3), get_digital_in(4), get_digital_in(5), get_digital_in(6), get_digital_in(7)])]
+
+			CUSTOM_INPUT = digital_in_flags[0]
+
+			data_str = ""
+			data_str = str_cat( data_str, to_str(jpos) )
+			data_str = str_cat( data_str, to_str(jvel) )
+			data_str = str_cat( data_str, to_str(tcp_pose) )
+			data_str = str_cat( data_str, to_str(tcp_vel) )
+			data_str = str_cat( data_str, to_str(jtorq) )
+			data_str = str_cat( data_str, to_str(tcp_wrench) )
+			data_str = str_cat( data_str, to_str(digital_in_flags) )
+
+			#textmsg(data_str)
+
+
+			#textmsg(digital_in)
+
+			socket_send_string(data_str, sock_fd_)
+
+			sync()
+
+		end
+
+	end
+
+	# ========  Thread: Run control  ==========
+
+	thread servoThread():
+
+		freedrive_on = False
+
+		while (True):
+
+			enter_critical
+				#if (RECEIVED_CMD):
+					servoj_state = cmd_state
+					arg1 = cmd_arg1
+					arg2 = cmd_arg2
+					arg3 = cmd_arg3
+					RECEIVED_CMD = False
+				#end
+			exit_critical
+
+			if (freedrive_on) and (servoj_state != FREEDRIVE):
+				end_freedrive_mode()
+				freedrive_on = False
+			end
+
+			if (servoj_state == JOINT_POS_CTRL):
+
+				SERVOJ_STATE_MSG = "JOINT_POS_CTRL"
+				servoj(arg1, arg3, arg2, ctrl_cycle, servo_lookahead_time, servo_gain)
+
+			elif (servoj_state == JOINT_VEL_CTRL):
+
+				SERVOJ_STATE_MSG = "JOINT_VEL_CTRL"
+				speedj(arg1, arg3, ctrl_cycle)
+
+			elif (servoj_state == CART_POS_CTRL):
+
+				SERVOJ_STATE_MSG = "CART_POS_CTRL"
+				q = get_inverse_kin( p[arg1[0], arg1[1], arg1[2], arg1[3], arg1[4], arg1[5]])
+				servoj(q, arg3, arg2, ctrl_cycle, servo_lookahead_time, servo_gain)
+
+			elif (servoj_state == CART_VEL_CTRL):
+
+				SERVOJ_STATE_MSG = "CART_VEL_CTRL"
+				speedl(arg1, arg3, ctrl_cycle)
+
+			elif (servoj_state == FREEDRIVE) and (freedrive_on == False):
+
+				SERVOJ_STATE_MSG = "FREEDRIVE"
+				freedrive_on = True
+				freedrive_mode()
+
+			elif (servoj_state == IDLE_MODE):
+
+				SERVOJ_STATE_MSG = "IDLE_MODE"
+				stopj(10)
+
+			elif (servoj_state == TERMINATE):
+
+				keepalive = False
+
+			else:
+
+				sync()
+
+			end
+
+		end
+	end
+
+	# ==========================
+	# ========  Main  ==========
+	# ==========================
+
+	# Set TCP to flange to avoid offset issues with wrenches, poses etc.
+	set_tcp(p[0, 0, 0, 0, 0, 0])
+
+	textmsg("Openning socket...")
+
+	# ========  Open socket  ==========
+	if ( socket_open(ip_addr, reverse_port_, sock_fd_) == False ):
+		textmsg("Failed to establish connection at ", str_cat(str_cat(ip_addr,":"), to_str(reverse_port_)))
+		halt
+	else:
+		textmsg("Socket opened!")
+	end
+
+	# ========  Launch command thread  ==========
+	textmsg("Launching ctrl thread!")
+	thread_servo = run servoThread()
+	textmsg("Ctrl thread started!")
+
+	# ========  Launch send_data thread  ==========
+	textmsg("Launching send-data thread!")
+	thread_send_data = run sendDataThread()
+	textmsg("Send-data thread started!")
+
+	# ========  Read from socket loop  ==========
+	action = UNASSIGNED_STATE
+
+	while keepalive :
+
+		params_ = socket_read_binary_integer(9, sock_fd_, sock_read_timeout)
+		#params_ = socket_read_ascii_float(9, sock_fd_, sock_read_timeout)
+		if (params_[0] > 0):
+
+			NO_CMD_COUNT = 0
+
+			action = params_[1]
+
+			if (action > UNASSIGNED_STATE) and ( action < BIAS_FT_SENSOR):
+				setState(action)
+			end
+
+			if (action > 0) and ( action < 5):
+
+				cmd_state = action
+
+				arg1 = [params_[2] / MULT_, params_[3] / MULT_, params_[4] / MULT_, params_[5] / MULT_, params_[6] / MULT_, params_[7] / MULT_]
+				arg2 = params_[8] / MULT_
+				arg3 = params_[9] / MULT_
+
+				#recv_msg = str_cat("inputs:", to_str(params_[0]))
+				#recv_msg = str_cat(recv_msg, ", state: ")
+				#recv_msg = str_cat(recv_msg, to_str(state))
+				#recv_msg = str_cat(recv_msg, ", arg1:")
+				#recv_msg = str_cat(recv_msg, to_str(arg1))
+				#textmsg(recv_msg)
+
+				setCmd(arg1, arg2, arg3)
+
+			elif (action == BIAS_FT_SENSOR):
+
+				zero_ftsensor()
+
+			end
+
+		else:
+
+			if (servoj_state != FREEDRIVE) and (servoj_state != IDLE_MODE):
+				NO_CMD_COUNT = NO_CMD_COUNT + 1
+			end
+
+		end
+
+		if (NO_CMD_COUNT > MAX_NO_CMD_COUNT):
+			keepalive = False
+		end
+
+	end
+
+	# ===============================
+
+	sleep(.1)
+	socket_close(sock_fd_)
+	kill thread_servo
+	kill thread_send_data
+
+end

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot name="car_starter" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+<!-- ===============  car_starter  =================-->
+
+<xacro:macro name="car_starter" params="prefix parent *origin">
+
+    <link name="${prefix}car_starter">
+        <visual>
+            <origin xyz="0.0125 -0.0288 0.0921" rpy="-1.57 0 1.57" />
+            <geometry>
+                <mesh scale="0.001 0.001 0.001" filename="package://main_program/meshes/car_starter.stl"/>
+            </geometry>
+            <material name="GoldMetal">
+               <color rgba="0.8 0.4 0 1.0"/>
+             </material>
+        </visual>
+    </link>
+
+    <joint name="${prefix}_kolFinger_carStarter_joint" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <parent link="${parent}"/>
+        <child link="${prefix}car_starter"/>
+    </joint>
+
+</xacro:macro>
+
+</robot>

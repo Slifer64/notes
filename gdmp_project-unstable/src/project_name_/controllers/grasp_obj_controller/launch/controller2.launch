@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="use_sim" default="false" />
+
+    <arg name="launch_camera" default="false" />
+    <arg name="use_apriltags" default="false" />
+
+    <arg name="launch_cam_tf_publisher" default="true" />
+
+    <arg name="robot_id" default="both" />
+    <arg name="load_camera"  default="false"/>
+
+    <arg name="gripper" default="rg2_ft" />
+
+    <arg name="launch_dummy_robot" default="true" />
+    
+    <arg name="host_ip"  default="192.168.56.1 "/> <!-- 10.0.0.3 or 127.0.0.1 -->
+    <arg name="robot_ip"  default="192.168.56.2"/> <!-- 10.0.0.1 or 127.0.0.1 -->
+    <arg name="reverse_port"  default="8080"/> <!-- 50001 -->
+
+    <arg name="move2jpos_topic"  default="move2jpos_service"/>
+    <arg name="tf_publish_topic"  default="/robot_camera_tf"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro '$(find grasp_obj_controller)/urdf/robot.xacro' robot_id:=$(arg robot_id) gripper:=$(arg gripper) load_camera:=$(arg load_camera)" />
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find grasp_obj_controller)/rviz/cfg.rviz" output="screen" required="true"/>
+
+    <arg name="camera" default="rs2" />
+    <group if="$(arg launch_camera)">
+      <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+        <arg name="camera" value="$(arg camera)" /> <!-- This will be the prefix of the published image and tags header -->
+
+        <arg name="publish_tf" value="false"/>
+
+        <arg name="enable_depth" value="true" />
+        <arg name="align_depth" value="true" />
+        <arg name="enable_sync" value="true" />
+        <arg name="enable_pointcloud" value="true" />
+        
+        <arg name="color_width" value="640"/>
+        <arg name="color_height" value="480"/>
+        <arg name="color_fps" value="30"/>
+
+        <arg name="depth_width" value="640"/>
+        <arg name="depth_height" value="480"/>
+        <arg name="depth_fps" value="30"/>
+    </include>
+
+    </group>
+
+    <group if="$(arg use_apriltags)">
+      <include file="$(find grasp_obj_controller)/launch/apriltag_detector.launch" />
+    </group>
+
+    <!-- launch-prefix="xterm -fa monaco -fs 13 -e gdb -args" -->
+    <arg name="node_name" default="project_name__node" />
+    <node pkg="main_program" type="main_program" name="$(arg node_name)"
+          output="screen" required="true">
+
+        <param name="use_sim" value="$(arg use_sim)"/>
+
+        <param name="host_ip" type="string" value="$(arg host_ip)" />
+        <param name="robot_ip" type="string" value="$(arg robot_ip)" />
+        <param name="reverse_port" type="int" value="$(arg reverse_port)" />
+
+        <param name="move2jpos_topic" type="string" value="$(arg move2jpos_topic)" />
+        <param name="robot_cam_tf_topic" type="string" value="$(arg tf_publish_topic)" />
+
+        <param name="image_topic" type="string" value="/$(arg camera)/color/image_raw" />
+        <!-- <param name="depth_image_topic" type="string" value="/$(arg camera)/depth/image_rect_raw" /> -->
+        <param name="depth_image_topic" type="string" value="/$(arg camera)/aligned_depth_to_color/image_raw" />
+        <param name="cam_info_topic" type="string" value="/$(arg camera)/color/camera_info" />
+
+        <rosparam>
+
+          robot_cam_tf_params: "grasp_obj_controller/config/robot_cam_tf.yaml"
+
+          im_traj_demo_controller: true
+          grasp_obj_controller: true
+
+          robot_type: "ur"
+          robot_description_name: "/robot_description"
+          base_link: "robotic_platform_base_link"
+          ftsensor_link: "ur5_right_tool0"
+          tool_link: "ee_link"
+          Fext_dead_zone: [3.0, 3.0, 3.0,  0.3, 0.3, 0.3]
+
+          robot_tag_link: "ur5_right_apriltag_link"
+
+          ctrl_cycle: 0.002
+          limits_check: false
+
+          # q_start: [-0.658, -1.48, -1.79, -3.82, 3.74, -1.39]
+          q_start: [-0.686, -1.51, -1.78, -3.84, 3.73, -1.45]
+
+          q_cam_calib: [0.368, -2.51, -1.59, -0.874, 0.828, -3.21]
+          
+
+          r85_gripper_options: 
+            {use_sim: false, prefix: "rg2_ft", http_link: "http://192.168.1.1:80"}
+
+        </rosparam>
+
+    </node>
+
+
+    <node pkg="robot_camera_tf_publisher" type="robot_camera_tf_publisher" name="robot_camera_tf_publisher_node"
+          output="screen" cwd="node" required="true" if="$(eval arg('launch_cam_tf_publisher') and arg('robot_id')=='both')">
+
+        <param name="use_sim" value="$(arg use_sim)"/>
+
+        <param name="move2jpos_topic" type="string" value="$(arg move2jpos_topic)" />
+        <param name="tf_publish_topic" type="string" value="$(arg tf_publish_topic)" />
+
+        <rosparam>
+
+            host_ip: "192.168.50.1"
+            robot_ip: "192.168.50.2"
+            reverse_port: 8081
+
+            robot_type: "ur"
+            robot_description_name: "/robot_description"
+            base_link: "robotic_platform_base_link"
+            camera_color_optical_link: "rs2_color_optical_frame"
+
+            # q_start: [-4.08, -2.49, -0.717, -2.01, 2.31, -1.04]
+            
+        </rosparam>
+
+    </node>
+
+
+    <node pkg="dummy_" type="dummy_camera" name="dummy_camera"
+          output="screen" cwd="node" required="true" if="$(arg launch_dummy_robot)">
+
+        <param name="robot_cam_tf_topic" type="string" value="$(arg tf_publish_topic)" />
+        <param name="cam_info_topic" type="string" value="/$(arg camera)/color/camera_info" />
+        <param name="image_topic" type="string" value="/$(arg camera)/color/image_raw" />
+        <param name="depth_image_topic" type="string" value="/$(arg camera)/aligned_depth_to_color/image_raw" />
+        <param name="pointcloud_topic" type="string" value="/$(arg camera)/depth/color/points" />
+
+        <rosparam>
+
+            robot_cam_tf: [0.4085, -0.1720, 0.7755, 0.1038, -0.6862, 0.7118, -0.1082]
+            cam_info_K: [609.3017, 0, 315.9312, 0, 608.4367, 238.9708, 0, 0, 1.0]
+
+            img_path: "/data/dummy_camera/rgb.png"
+            depth_path: "/data/dummy_camera/depth.png"
+
+            robot_base_frame: "robotic_platform_base_link"
+
+        </rosparam>
+
+    </node>
+
+</launch>

@@ -1,0 +1,22 @@
+<!--
+   Aristotle Univercisty of Thessaloniki
+   Robotics and Automation Lab
+
+   Author: Savvas Sampaziotis
+   e-mail: savvas.sampaziotis@gmail.com
+-->
+
+<launch>
+    <!--  RVIZ    -->
+    <node   type="rviz" name="rviz" pkg="rviz"
+            args="-d $(find camera_robot_calibration)/rviz/calibrate_camera_view.rviz" />
+
+    <!--    CALIBRATION  NODE -->
+    <node   type="camera_robot_calibration_node.py" name="camera_robot_calibration_node"
+            pkg="camera_robot_calibration"
+            output="screen"/>
+
+    <!--  CONFIG FILE    -->
+   <rosparam   command="load" file="$(find camera_robot_calibration)/config/tags_11_12_corners.yaml" /> 
+
+</launch>

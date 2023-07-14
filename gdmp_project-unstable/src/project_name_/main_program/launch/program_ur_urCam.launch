@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="use_sim" default="false" />
+
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find project_name_)/urdf/ur5_rs2_ur5_r85gripper_description.xacro'" />
+
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find project_name_)/rviz/ur5_urCam.rviz" output="screen" required="true"/>
+
+    <!-- <node name="robot_joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <remap from="robot_description" to="robot_description" />
+      <rosparam>
+          use_gui: true
+      </rosparam>
+    </node>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+      <remap from="robot_description" to="robot_description" />
+    </node> -->
+
+
+
+    <node pkg="project_name_" type="project_name_" name="program_ur_ctrl" args="-ur_right"
+          output="screen" cwd="node" required="true">
+
+        <param name="use_sim" value="$(arg use_sim)"/>
+
+        <rosparam>
+
+            host_ip: "10.0.0.3"
+            robot_ip: "10.0.0.1"
+            reverse_port: 8080
+
+            model_path: "/config/model/"
+            train_data_path: "/config/training/"
+            exec_data_path: "/config/execution/"
+
+            robot_type: "ur"
+            robot_description_name: "/robot_description"
+            base_link: "ur5_base_link"
+            tool_link: "ur5_ee_link"
+            Fext_dead_zone: [2.0, 2.0, 2.0,  0.1, 0.1, 0.1]
+
+            ctrl_cycle: 0.002
+
+            q_start: [-1.2, -0.866, -1.61, -2.17, 1.57, 0]
+
+            model_filename: "pih_ur_gmp_target_model.bin"
+            train_data_filename: "pih_ur_train_data.bin"
+
+            r85_gripper_options: 
+              {use_sim: true, prefix: "ur5_r85_", http_link: "http://192.168.1.1:80"}
+
+            operations_tags_map:
+              [
+                {name: 'pick',  id: 0, tags: [0, 1, 2]},
+                {name: 'place', id: 1, tags: [3, 4, 5]},
+                {name: 'other', id: 2, tags: [6, 7]}
+              ]
+        </rosparam>
+
+    </node>
+
+
+    <node pkg="robot_camera_tf_publisher" type="robot_camera_tf_publisher" name="robot_camera_tf_publisher_node"
+          output="screen" cwd="node" required="true">
+
+        <param name="use_sim" value="$(arg use_sim)"/>
+
+        <rosparam>
+
+            host_ip: "10.0.0.3"
+            robot_ip: "10.0.0.1"
+            reverse_port: 8080
+
+            robot_type: "ur"
+            robot_description_name: "/robot_description"
+            base_link: "ur5_base_link"  # the link w.r.t. which the camera tranform is published
+            camera_color_optical_link: "ur5Cam_rs_d435i_color_optical_frame"
+            tf_publish_topic: "/robot_camera_tf"
+            
+        </rosparam>
+
+    </node>
+
+
+</launch>

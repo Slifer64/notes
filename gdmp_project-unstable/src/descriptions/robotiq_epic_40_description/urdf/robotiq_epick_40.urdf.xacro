@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+
+<!--
+=========  PARAMS  ========
+- prefix        : the prefix for all constructed links/joints   (default='epick')
+- parent        : the parent link
+- *origin       : origin block of the camera's base w.r.t. the parent link
+
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_base_link       : the gripper's base link
+- ${prefix}_ee_link   :  the gripper's tip link
+-->
+
+<robot name="robotiq_epick" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    
+    <xacro:macro name="robotiq_epick" params="prefix parent *origin">
+
+        <joint name="${prefix}_base_joint" type="fixed">
+            <parent link="${parent}"/>
+            <child link="${prefix}_base_link"/>
+            <xacro:insert_block name="origin"/>
+        </joint>
+        
+        <link name="${prefix}_base_link">
+            <visual>
+                <geometry>
+                    <mesh filename="package://descriptions/robotiq_epic_40_description/meshes/collision/Epick_Festo40.stl"/>
+                </geometry>
+                
+            <material name="epick_color">
+            <color rgba="0.2 0.2 0.2 1"/>
+        </material>
+
+            </visual>
+            
+            <collision>
+                <geometry>
+                    <mesh filename="package://descriptions/robotiq_epic_40_description/meshes/collision/Epick_Festo40.stl"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="${prefix}_ee_joint" type="fixed">
+            <origin xyz="0 0 0.15" rpy="0 0 0"/>
+            <parent link="${prefix}_base_link"/>
+            <child link="${prefix}_ee_link"/>
+        </joint>
+
+        <link name="${prefix}_ee_link" />
+
+
+    </xacro:macro>    
+
+</robot>

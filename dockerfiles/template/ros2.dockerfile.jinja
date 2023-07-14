@@ -1,0 +1,106 @@
+##############################################
+# Created from template ros2.dockerfile.jinja
+##############################################
+
+###########################################
+# Base image 
+###########################################
+FROM {{ base_image }}:{{ image_version }} AS base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+{% include 'snippits/language.jinja' %}
+
+{% include 'snippits/timezone.jinja' %}
+
+RUN apt-get update && apt-get -y upgrade \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install common programs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg2 \
+    lsb-release \
+    sudo \
+    software-properties-common \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ROS2
+RUN sudo add-apt-repository universe \
+  && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null \
+  && apt-get update && apt-get install -y --no-install-recommends \
+    ros-{{ ros_distro }}-ros-base \
+    python3-argcomplete \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV ROS_DISTRO={{ ros_distro }}
+ENV AMENT_PREFIX_PATH=/opt/ros/{{ ros_distro }}
+ENV COLCON_PREFIX_PATH=/opt/ros/{{ ros_distro }}
+ENV LD_LIBRARY_PATH=/opt/ros/{{ ros_distro }}/lib
+ENV PATH=/opt/ros/{{ ros_distro }}/bin:$PATH
+ENV PYTHONPATH=/opt/ros/{{ ros_distro }}/lib/python{{ python_version }}/site-packages
+ENV ROS_PYTHON_VERSION=3
+ENV ROS_VERSION=2
+ENV DEBIAN_FRONTEND=
+
+###########################################
+#  Develop image 
+###########################################
+FROM base AS dev
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  bash-completion \
+  build-essential \
+  cmake \
+  gdb \
+  git \
+  openssh-client \
+  python3-argcomplete \
+  python3-pip \
+  ros-dev-tools \
+  vim \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN rosdep init || echo "rosdep already initialized"
+
+{% include 'snippits/ros_user.jinja' %}
+
+ENV DEBIAN_FRONTEND=
+ENV AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=1
+
+###########################################
+#  Full image 
+###########################################
+FROM dev AS full
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install the full release
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  ros-{{ ros_distro }}-desktop \
+  && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=
+
+###########################################
+#  Full+Gazebo image 
+###########################################
+FROM full AS gazebo
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install gazebo
+RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
+  && apt-get update && apt-get install -q -y --no-install-recommends \
+    ros-{{ ros_distro }}-gazebo* \
+  && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=
+
+###########################################
+#  Full+Gazebo+Nvidia image 
+###########################################
+
+FROM gazebo AS gazebo-nvidia
+
+{% include 'snippits/nvidia.jinja' %}

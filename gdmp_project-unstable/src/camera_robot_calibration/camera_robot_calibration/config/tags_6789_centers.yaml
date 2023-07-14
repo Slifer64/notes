@@ -1,0 +1,21 @@
+#
+# UR5 calibration data
+#
+Calibration:
+  Camera: "D435i"
+  output_filename: "UR5_calibration.dat"
+  # if values is "centers" the camera frame is estimated based on the centers of the tags
+  # if values is "corners" the camera frame is estimated based on the corners of the tags
+  CalibrationMode: "centers"
+  TagSize: 0.0637 # m
+
+  tags:
+      tag_6:
+        center: [ -0.125, -0.226, 0.005 ]
+      tag_7:
+        center: [ -0.043, -0.227, 0.005 ]
+      tag_8:
+        center: [ -0.126, -0.309, 0.005 ]
+      tag_9:
+        center: [ -0.0422, -0.302, 0.005 ]
+

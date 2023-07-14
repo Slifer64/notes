@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+  <name>robotiq_85_gripper</name>
+  <version>0.0.0</version>
+  <description>robotiq_85_gripper</description>
+
+  <maintainer email="antosidi646@gmail.com">Antonis Sidiropoulos</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+<export></export>
+
+</package>

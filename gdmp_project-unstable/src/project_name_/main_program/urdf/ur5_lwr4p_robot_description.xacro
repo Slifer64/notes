@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot name="ur5_lwr4p_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ur5 -->
+<xacro:include filename="$(find ur_e_description)/urdf/ur5e.urdf.xacro" />
+<xacro:include filename="$(find lwr4p)/urdf/kuka_lwr_arm.xacro"/>
+
+<xacro:include filename="$(find descriptions)/robots/ur5e_phritool.urdf.xacro" />
+<xacro:include filename="$(find descriptions)/robots/ur5e_ati40_phritool.urdf.xacro" />
+<xacro:include filename="$(find descriptions)/robots/ur5e_notool.urdf.xacro" />
+
+<xacro:include filename="$(find descriptions)/robots/ur5e_adapter_rs435i.urdf.xacro" />
+
+
+
+<xacro:include filename="$(find descriptions)/robots/lwr4p_notool.urdf.xacro" />
+<xacro:include filename="$(find descriptions)/robots/lwr4p_phritool.urdf.xacro" />
+<xacro:include filename="$(find descriptions)/robots/lwr4p_ati40_phritool.urdf.xacro" />
+
+
+
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+<!-- =============  ur5  ============= -->
+<xacro:ur5e_adapter_rs435i_robot parent="world" prefix="ur5">
+    <origin xyz="-0.6 0 0" rpy="0 0 0" /> <!-- robot_base_origin -->
+</xacro:ur5e_adapter_rs435i_robot>
+
+
+<!-- =============  lwr4p  ============= -->
+<xacro:lwr4p_ati40_phritool_robot parent="world" prefix="lwr4p">
+    <origin xyz="0 0 0" rpy="0 0 0" /> <!-- robot_base_origin -->
+</xacro:lwr4p_ati40_phritool_robot>
+
+</robot>

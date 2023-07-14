@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<robot name="asus" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  
+
+<!--
+=========  INCLUDES  ========
+-->
+
+<xacro:include filename="$(find descriptions)/xtion_description/urdf/common.xacro" />
+
+<!--
+=========  PARAMS  ========
+- parent                   : the parent link
+- prefix                   : the prefix for all constructed links/joints                  (default=camera)
+- *origin                  : origin block of the camera's base link w.r.t. the parent link
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_link                      :  the camera's base link that is attached to the ${parent}
+- ${prefix}_rgb_optical_frame         :  the frame of the color optical sensor
+- ${prefix}_depth_optical_frame       :  the frame of the depth optical sensor
+-->
+
+
+  <!-- ASUS properties -->
+  <xacro:property name="M_SCALE" value="1"/>
+  <xacro:property name="asus_xtion_pro_depth_rel_rgb_py" value="0.0270" />
+  <xacro:property name="asus_xtion_pro_cam_rel_rgb_py"   value="-0.0220" />
+
+  <xacro:macro name="asus_xtion_pro_sensor" params="parent prefix:=camera *origin">
+
+    <joint name="${prefix}_camera_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}"/>
+      <child link="${prefix}_link" />
+    </joint>
+    
+    <link name="${prefix}_link">
+      <visual>
+        <!-- <origin xyz="0.0 0.0 -0.0" rpy="${-M_PI/2} -${M_PI} ${-M_PI/2}"/> -->
+        <origin xyz="0.011 0.027 -0.017" rpy="${-M_PI/2} -${M_PI} ${-M_PI/2}"/>
+        <geometry>
+          <mesh filename="package://descriptions/xtion_description/meshes/asus_xtion_pro_live_2.dae" scale="${M_SCALE} ${M_SCALE} ${M_SCALE}"/>
+        </geometry>
+        <material name="Grey2" />
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.05 0.20 0.05"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.170" />
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <cuboid_inertia_def x="0.05" y="0.2" z="0.05" mass="0.170"/>
+      </inertial>
+    </link>
+    
+    <joint name="${prefix}_camera_rgb_joint" type="fixed">
+      <origin xyz="0 ${-asus_xtion_pro_cam_rel_rgb_py} 0" 
+              rpy="0 0 0"/>
+      <parent link="${prefix}_link"/>
+      <child link="${prefix}_rgb_frame"/>
+    </joint>
+    <link name="${prefix}_rgb_frame"/>
+    
+    <joint name="${prefix}_camera_rgb_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="${prefix}_rgb_frame" />
+      <child link="${prefix}_rgb_optical_frame" />
+    </joint>
+    <link name="${prefix}_rgb_optical_frame"/>
+
+    <joint name="${prefix}_camera_depth_joint" type="fixed">
+      <origin xyz="0 ${asus_xtion_pro_depth_rel_rgb_py} 0" rpy="0 0 0" />
+      <parent link="${prefix}_rgb_frame" />
+      <child link="${prefix}_depth_frame" />
+    </joint>
+    <link name="${prefix}_depth_frame"/>
+
+    <joint name="${prefix}_camera_depth_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <parent link="${prefix}_depth_frame" />
+      <child link="${prefix}_depth_optical_frame" />
+    </joint>
+    <link name="${prefix}_depth_optical_frame"/>
+
+  </xacro:macro>
+
+</robot>

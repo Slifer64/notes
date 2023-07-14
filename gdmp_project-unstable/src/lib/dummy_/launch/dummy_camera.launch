@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="tf_publish_topic"  default="/robot_camera_tf"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro '$(find dummy_)/urdf/robot.xacro' robot_id:=right gripper:='' load_camera:=false" />
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find dummy_)/rviz/cfg.rviz" output="screen" required="true"/>
+
+    <arg name="camera" default="rs2" />
+
+    <node pkg="dummy_" type="dummy_camera" name="dummy_camera" output="screen" cwd="node" required="true">
+
+        <param name="robot_cam_tf_topic" type="string" value="$(arg tf_publish_topic)" />
+        <param name="cam_info_topic" type="string" value="/$(arg camera)/color/camera_info" />
+        <param name="image_topic" type="string" value="/$(arg camera)/color/image_raw" />
+        <param name="depth_image_topic" type="string" value="/$(arg camera)/aligned_depth_to_color/image_raw" />
+        <param name="pointcloud_topic" type="string" value="/$(arg camera)/depth/color/points" />
+
+        <rosparam>
+
+            robot_cam_tf: [0.4085, -0.1720, 0.7755, 0.1038, -0.6862, 0.7118, -0.1082]
+            cam_info_K: [609.3017, 0, 315.9312, 0, 608.4367, 238.9708, 0, 0, 1.0]
+
+            img_path: "/data/dummy_camera/rgb.png"
+            depth_path: "/data/dummy_camera/depth.png"
+
+            robot_base_frame: "base_link"  # must exist in the robot.xacro
+
+        </rosparam>
+
+    </node>
+
+</launch>

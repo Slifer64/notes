@@ -1,0 +1,15 @@
+#goal definition
+sensor_msgs/Image rgb
+string model_name
+uint16 target_obj_id 
+---
+#result definition
+bool success
+string msg 
+float64[] mp_x_weights
+float64[] mp_y_weights
+float64[] mp_theta_weights
+---
+#feedback
+bool finished
+float64 progress

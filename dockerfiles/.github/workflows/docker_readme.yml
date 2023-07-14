@@ -1,0 +1,36 @@
+name: Update Readme
+# Update the readme file for docker images when the description changes and is merged into main.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+      - .github/workflows/docker_readme.yml
+  workflow_dispatch:
+
+jobs:
+  readme:
+    runs-on: ubuntu-latest
+    name: Push README to Docker Hub
+    strategy:
+      fail-fast: false
+      matrix:
+        docker_repo:
+          - ros
+          - ros2
+          - gazebo
+          - ignition
+          - gz
+    steps:
+      - name: git checkout
+        uses: actions/checkout@v3
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: althack
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: althack/${{ matrix.docker_repo }}
+          readme-filepath: ${{ matrix.docker_repo }}/README.md
+          short-description: |
+            An assortment of development containers for ${{ matrix.docker_repo }}

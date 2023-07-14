@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  INCLUDES  ========
+-->
+
+<!-- lwr4p -->
+<xacro:include filename="$(find descriptions)/lwr4p_description/urdf/lwr4p.urdf.xacro" />
+
+<!-- asus xtion pro -->
+<xacro:include filename="$(find descriptions)/xtion_description/urdf/asus_xtion_pro.urdf.xacro" />
+
+<!--
+=========  PARAMS  ========
+- parent              : the parent link
+- prefix              : the prefix for all constructed links/joints                                          (default='lwr4p')
+- *origin             : origin block of the robot's base w.r.t. the parent link
+- ee_frame_pos        : position of the end-effector frame w.r.t. the cameras color optical frame            (default='0 0 0' the camera's color optical frame)
+- ee_frame_orient     : orientation of the end-effector frame w.r.t. the cameras color optical frame         (default='0 0 0')
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_base_link                     :  the robot's base link
+- ${prefix}_ee_link                       :  the end-effector link (default: the camera's color optical frame) 
+- ${prefix}:_arm_7_link                   :  robot's flange
+- ${prefix}_xtion_pro_rgb_optical_frame   :  the camera's color optical frame
+-->
+
+<xacro:macro name="lwr4p_asus_xtion_pro_robot" 
+    params="
+        parent
+        prefix:='lwr4p' 
+        *origin 
+        ee_frame_pos:='0 0 0' 
+        ee_frame_orient:='0 0 0'
+    ">
+
+  <!-- =========   base link   ========= -->
+  <link name="${prefix}_base_link" />
+
+  <joint name="${prefix}_world_base_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}"/>
+      <child link="${prefix}_base_link"/>
+  </joint>
+
+  <!-- =========   robot   ========= -->
+  <xacro:kuka_lwr_arm parent="${prefix}_base_link" name="${prefix}:" right="1" tool_name=""/>
+
+  <!-- =========   camera sensor   ========= -->
+  <xacro:asus_xtion_pro_sensor parent="${prefix}:_arm_7_link" prefix="${prefix}_xtion_pro">
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </xacro:asus_xtion_pro_sensor>
+
+  <!-- =========   ee link   ========= -->
+  <link name="${prefix}_ee_link"/>
+
+  <joint name="${prefix}_camera_ee_joint" type="fixed">
+    <origin xyz="${ee_frame_pos}" rpy="${ee_frame_orient}"/>
+    <parent link="${prefix}_xtion_pro_rgb_optical_frame"/>
+    <child link="${prefix}_ee_link"/>
+  </joint>
+
+</xacro:macro>
+
+</robot>

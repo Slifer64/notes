@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  INCLUDES  ========
+-->
+
+<!-- ur5e -->
+<xacro:include filename="$(find descriptions)/ur_e_description/urdf/ur5e.urdf.xacro" />
+
+
+<!--
+=========  PARAMS  ========
+- parent              : the parent link
+- prefix              : the prefix for all constructed links/joints                                          (default='ur5e')
+- *robot_base_origin  : an origin block specifying the origin of the robot's base w.r.t. the parent link
+- ee_frame_pos        : position of the end-effector frame w.r.t. the tool-tip                               (default='0 0 0' the robot's flange)
+- ee_frame_orient     : orientation of the end-effector frame w.r.t. the tool-tip                            (default='0 0 0')
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_base_link            :  the ur5 robot's base link
+- ${prefix}_ee_link              :  the end-effector link (default: the tip of the pHRI tool) 
+- ${prefix}:tool0                :  robot's flange
+-->
+
+<xacro:macro name="ur5e_notool_robot" 
+    params="
+        parent
+        prefix:='ur5e' 
+        *robot_base_origin 
+        ee_frame_pos:='0 0 0' 
+        ee_frame_orient:='0 0 0'
+    ">
+
+  <!-- =========   base link   ========= -->
+  <link name="${prefix}_base_link" />
+
+  <joint name="${prefix}_world_base_joint" type="fixed">
+      <xacro:insert_block name="robot_base_origin" />
+      <parent link="${parent}"/>
+      <child link="${prefix}_base_link"/>
+  </joint>
+
+  <!-- =========   robot   ========= -->
+  <xacro:ur5e_robot prefix="${prefix}:" joint_limited="false"/>
+
+  <joint name="${prefix}:base_joint" type="fixed">
+    <parent link="${prefix}_base_link" />
+    <child link = "${prefix}:base_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0" />
+  </joint>
+
+
+  <!-- =========   ee link   ========= -->
+  <link name="${prefix}_ee_link"/>
+
+  <joint name="${prefix}_phri_tool_ee_joint" type="fixed">
+    <origin xyz="${ee_frame_pos}" rpy="${ee_frame_orient}"/>
+    <parent link="${prefix}:tool0"/>
+    <child link="${prefix}_ee_link"/>
+  </joint>
+
+</xacro:macro>
+
+</robot>

@@ -1,0 +1,27 @@
+<!--
+   Aristotle Univercisty of Thessaloniki
+   Robotics and Automation Lab
+
+   Author: Savvas Sampaziotis
+   e-mail: savvas.sampaziotis@gmail.com
+-->
+<launch>
+
+    <node type="rviz"
+        name="rviz"
+        pkg="rviz"
+        args="-d $(find camera_robot_calibration)/rviz/apriltag_viewer.rviz" />
+
+<!--     TODO: implement custom roslaunch call with appropriate realsense parameters -->
+   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+<!--         include appropriate parameters WARNING: THESE DO NOT WORK -->
+        <arg name="align_depth" value="true"/>
+<!--         <arg name="filters" value="pointcloud"/> -->
+    </include>
+
+    <node type="apriltag_viewer.py"
+            name="apriltag_viewer"
+            pkg="camera_robot_calibration"
+            output="screen"/>
+    
+</launch>

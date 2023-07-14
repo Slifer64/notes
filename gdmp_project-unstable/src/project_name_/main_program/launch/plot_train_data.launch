@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+
+    <node pkg="main_program" type="plot_train_data" name="plot_train_data_node" output="screen" required="false">
+      <!-- launch-prefix="xterm -fa monaco -fs 13 -e gdb -args" > -->
+
+    </node>
+
+</launch>

@@ -1,0 +1,101 @@
+#############################################
+# Created from template ros.dockerfile.jinja
+#############################################
+
+###########################################
+# Base image 
+###########################################
+FROM ubuntu:{{ ubuntu_distro }} AS base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+{% include 'snippits/language.jinja' %}
+
+{% include 'snippits/timezone.jinja' %}
+
+# Install ROS
+RUN apt-get update && apt-get install -y \
+    curl \
+    dirmngr \
+    gnupg2 \
+    lsb-release \
+    sudo \
+  && sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' \
+  && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
+  && apt-get update && apt-get install -y \
+    ros-{{ ros_distro }}-ros-base \
+  && rm -rf /var/lib/apt/lists/*
+
+# Setup environment
+ENV LD_LIBRARY_PATH=/opt/ros/{{ ros_distro }}/lib
+ENV ROS_DISTRO={{ ros_distro }}
+ENV ROS_ROOT=/opt/ros/{{ ros_distro }}/share/ros
+ENV ROS_PACKAGE_PATH=/opt/ros/{{ ros_distro }}/share
+ENV ROS_MASTER_URI=http://localhost:11311
+ENV ROS_PYTHON_VERSION={{ python_env }}
+ENV ROS_VERSION=1
+ENV PATH=/opt/ros/{{ ros_distro }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV ROSLISP_PACKAGE_DIRECTORIES=
+ENV PYTHONPATH=/opt/ros/{{ ros_distro }}/lib/python{{ python_version }}/dist-packages
+ENV PKG_CONFIG_PATH=/opt/ros/{{ ros_distro }}/lib/pkgconfig
+ENV ROS_ETC_DIR=/opt/ros/{{ ros_distro }}/etc/ros
+ENV CMAKE_PREFIX_PATH=/opt/ros/{{ ros_distro }}
+ENV DEBIAN_FRONTEND=
+
+###########################################
+# Develop image 
+###########################################
+FROM base AS dev
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install dev tools
+RUN apt-get update && apt-get install -y \
+    python{{ python_env }}-rosdep \
+    python{{ python_env }}-rosinstall \
+    python{{ python_env }}-rosinstall-generator \
+    python{{ python_env }}-wstool \
+    python{{ python_env }}-pip \
+    python{{ python_env }}-pep8 \
+    python{{ python_env }}-autopep8 \
+    pylint{{ python_env }} \
+    build-essential \
+    bash-completion \
+    git \
+    vim \
+  && rm -rf /var/lib/apt/lists/* \
+  && rosdep init || echo "rosdep already initialized"
+
+{% include 'snippits/ros_user.jinja' %}
+ENV DEBIAN_FRONTEND=
+
+###########################################
+# Full image 
+###########################################
+FROM dev AS full
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install the full release
+RUN apt-get update && apt-get install -y \
+  ros-{{ ros_distro }}-desktop \
+  && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=
+
+###########################################
+#  Full+Gazebo image 
+###########################################
+FROM full AS gazebo
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Install gazebo
+RUN apt-get update && apt-get install -y \
+  ros-{{ ros_distro }}-gazebo* \
+  && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=
+
+###########################################
+#  Full+Gazebo+Nvidia image 
+###########################################
+
+FROM gazebo AS gazebo-nvidia
+
+{% include 'snippits/nvidia.jinja' %}

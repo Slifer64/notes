@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<robot name="ur5_rs2_ur5_r85gripper_description" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ur5, rs_d435i -->
+<xacro:include filename="$(find descriptions)/robots/ur5e_adapter_rs435i.urdf.xacro" />
+
+<!-- ur5, r85_gripper -->
+<xacro:include filename="$(find descriptions)/robots/ur5e_robotiq85gripper.urdf.xacro" />
+
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+
+<xacro:ur5e_adapter_rs435i_robot parent="world" prefix="ur5Cam">
+    <origin xyz="-0.55 0 0" rpy="0 0 0" /> <!-- robot_base_origin -->
+</xacro:ur5e_adapter_rs435i_robot>
+
+<xacro:ur5e_r85gripper_robot parent="world" prefix="ur5" ee_frame_pos="0 0 0.11">
+  <origin xyz="0.55 0 0" rpy="0 0 0" />
+</xacro:ur5e_r85gripper_robot>
+
+
+</robot>

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package>
+  <name>main_program</name>
+  <version>0.0.0</version>
+  <description>main_program</description>
+
+  <maintainer email="antosidi646@gmail.com">Antonis Sidiropoulos</maintainer>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <run_depend>roscpp</run_depend>
+
+  <build_depend>roslib</build_depend>
+  <run_depend>roslib</run_depend>
+  
+  <build_depend>main_controller</build_depend>
+  <run_depend>main_controller</run_depend>
+
+  <build_depend>gmp_mpc_controller</build_depend>
+  <run_depend>gmp_mpc_controller</run_depend>
+
+  <build_depend>train_controller</build_depend>
+  <run_depend>train_controller</run_depend>
+
+  <build_depend>admittance_controller</build_depend>
+  <run_depend>admittance_controller</run_depend>
+
+  <build_depend>online_adapt_controller</build_depend>
+  <run_depend>online_adapt_controller</run_depend>
+
+  <build_depend>im_traj_demo_controller</build_depend>
+  <run_depend>im_traj_demo_controller</run_depend>
+
+  <build_depend>grasp_obj_controller</build_depend>
+  <run_depend>grasp_obj_controller</run_depend>
+  
+  <export></export>
+</package>

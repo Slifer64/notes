@@ -1,0 +1,17 @@
+T_base_camOpt:
+  {
+    pos: [0.57351093, -1.0875482, 0.68897734],
+    orient: [0.50049357, -0.86534797, 0.02532088, 0.0061588726],
+  }
+
+T_camBase_camOpt:
+  {
+    pos: [0.0106, 0.0325, 0.0125],
+    orient: [0.5, -0.5, 0.5, -0.5],
+  }
+
+base_link: "base_link"  # should be the base_link provided by the ros params
+camera_base_link: "rs2_bottom_screw_frame"
+camera_opt_frame_link:  "rs2_color_optical_frame"
+
+

@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="use_sim" default="false" />
+
+    <arg name="use_apriltags" default="true" />
+
+    <arg name="launch_cam_tf_publisher" default="false" />
+
+    <arg name="robot_id" default="right" />
+
+    <arg name="gripper" default="epick40" />
+
+    <arg name="host_ip"  default="10.0.0.3"/> <!-- 10.0.0.3 or 127.0.0.1 -->
+    <arg name="robot_ip"  default="10.0.0.1"/> <!-- 10.0.0.1 or 127.0.0.1 -->
+    <arg name="reverse_port"  default="8080"/> <!-- 50001 -->
+
+    <param name="robot_description" command="$(find xacro)/xacro '$(find online_adapt_controller)/urdf/robot.xacro' gripper:=$(arg gripper) load_camera:=true" />
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find online_adapt_controller)/rviz/cfg.rviz" output="screen" required="true"/>
+
+    <group if="$(arg use_apriltags)">
+      <include file="$(find online_adapt_controller)/launch/apriltag_detector.launch" />
+    </group>
+
+    <!-- launch-prefix="xterm -fa monaco -fs 13 -e gdb -args" -->
+    <arg name="node_name" default="project_name__node" />
+    <node pkg="main_program" type="main_program" name="$(arg node_name)"
+          output="screen" required="true">
+
+        <param name="use_sim" value="$(arg use_sim)"/>
+
+        <param name="host_ip" type="string" value="$(arg host_ip)" />
+        <param name="robot_ip" type="string" value="$(arg robot_ip)" />
+        <param name="reverse_port" type="int" value="$(arg reverse_port)" />
+
+        <rosparam>
+
+            robot_cam_tf_params: "online_adapt_controller/config/robot_cam_tf.yaml"
+            robot_tag_link: "ur5_apriltag_link"
+
+            train_controller: true
+            online_adapt_controller: true
+
+            robot_type: "ur"
+            robot_description_name: "/robot_description"
+            base_link: "base_link"
+            tool_link: "ee_link"
+            Fext_dead_zone: [4.0, 4.0, 4.0,  0.3, 0.3, 0.3]
+
+            ctrl_cycle: 0.002
+            limits_check: false
+
+            q_cam_calib: [-0.518, -2.36, -0.828, -2.44, 2.55, 0.346]
+
+            q_start: [1.64, -1.4, -1.9, -1.43, 1.58, 1.1]
+
+        </rosparam>
+
+    </node>
+
+    <include file="$(find robotic_epick40)/launch/robotic_epick40.launch" 
+      if="$(eval arg('gripper') == 'epick40' and not arg('use_sim'))" />
+
+</launch>

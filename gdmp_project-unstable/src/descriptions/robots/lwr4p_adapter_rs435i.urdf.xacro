@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  INCLUDES  ========
+-->
+
+<!-- lwr4p -->
+<xacro:include filename="$(find descriptions)/lwr4p_description/urdf/lwr4p.urdf.xacro" />
+
+<!-- rs d435i -->
+<xacro:include filename="$(find descriptions)/realsense2_description/urdf/_d435i.urdf.xacro" />
+<!-- rs adapter -->
+<xacro:include filename="$(find descriptions)/realsense2_description/urdf/rs_adapter.urdf.xacro" />
+
+<!--
+=========  PARAMS  ========
+- parent              : the parent link
+- prefix              : the prefix for all constructed links/joints                                          (default='lwr4p')
+- *robot_base_origin  : an origin block specifying the origin of the robot's base w.r.t. the parent link
+- ee_frame_pos        : position of the end-effector frame w.r.t. the cameras color optical frame            (default='0 0 0' the camera's color optical frame)
+- ee_frame_orient     : orientation of the end-effector frame w.r.t. the cameras color optical frame         (default='0 0 0')
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_base_link                     :  the robot's base link
+- ${prefix}_ee_link                       :  the end-effector link (default: the camera's color optical frame) 
+- ${prefix}:_arm_7_link                   :  robot's flange
+- ${prefix}_rs_d435i_color_optical_frame  :  the camera's color optical frame
+-->
+
+<xacro:macro name="lwr4p_adapter_rs435i_robot" 
+    params="
+        parent
+        prefix:='lwr4p' 
+        *robot_base_origin 
+        ee_frame_pos:='0 0 0' 
+        ee_frame_orient:='0 0 0'
+    ">
+
+  <!-- =========   base link   ========= -->
+  <link name="${prefix}_base_link" />
+
+  <joint name="${prefix}_world_base_joint" type="fixed">
+      <xacro:insert_block name="robot_base_origin" />
+      <parent link="${parent}"/>
+      <child link="${prefix}_base_link"/>
+  </joint>
+
+  <!-- =========   robot   ========= -->
+  <xacro:kuka_lwr_arm parent="${prefix}_base_link" name="${prefix}:" right="1" tool_name=""/>
+
+  <!-- =========   camera adapter   ========= -->
+  <xacro:rs_adapter prefix="${prefix}_rs_adapter" parent="${prefix}:_arm_7_link" />
+
+  <!-- =========   camera sensor   ========= -->
+  <xacro:sensor_d435i parent="${prefix}_rs_adapter_camera_mount" name="${prefix}_rs_d435i" use_nominal_extrinsics="true">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:sensor_d435i>
+
+  <!-- =========   ee link   ========= -->
+  <link name="${prefix}_ee_link"/>
+
+  <joint name="${prefix}_camera_ee_joint" type="fixed">
+    <origin xyz="${ee_frame_pos}" rpy="${ee_frame_orient}"/>
+    <parent link="${prefix}_rs_d435i_color_optical_frame"/>
+    <child link="${prefix}_ee_link"/>
+  </joint>
+
+</xacro:macro>
+
+</robot>

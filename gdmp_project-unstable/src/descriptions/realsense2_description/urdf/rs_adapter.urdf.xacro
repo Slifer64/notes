@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  PARAMS  ========
+- parent          : the parent link where the adapter is mounted
+- prefix          : the prefix for all constructed links/joints          (default='rs_adapter')
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_mount               :  the mount point of the adapter
+- ${prefix}_camera_mount        :  the mount point of the camera sensor
+-->
+
+<xacro:property name="M_PI" value="3.1415926535897931" />
+
+<xacro:macro name="rs_adapter" 
+    params="
+        parent
+        prefix:='rs_adapter'
+    ">
+
+    <!-- =========   mount link   ========= -->
+    <link name="${prefix}_mount"/>
+
+    <joint name="${prefix}_parent_mount_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="${parent}" />
+        <child link = "${prefix}_mount" />
+    </joint>
+    
+
+    <!-- =========   adapter shape  ========= -->
+    <link name="${prefix}_shape">
+        <visual>
+        <geometry>
+            <mesh filename="package://descriptions/realsense2_description/meshes/rs_adapter.dae"/>
+        </geometry>
+        </visual>
+    </link>
+
+    <joint name="${prefix}_mount_shape_joint" type="fixed">
+        <parent link="${prefix}_mount" />
+        <child link = "${prefix}_shape" />
+        <origin xyz="-0.031 -0.08 0.0" rpy="0 0 0" />
+    </joint>
+
+    
+    <!-- =========   mount 2 link   ========= -->
+
+    <link name="${prefix}_mount2"/>
+
+    <joint name="${prefix}_mount_mount2_joint" type="fixed">
+        <parent link="${prefix}_mount" />
+        <child link = "${prefix}_mount2" />
+        <origin xyz="0.0 0.0 0.005" rpy="0 0 0" />
+    </joint>
+    
+    <!-- =========   mount 3 link   ========= -->
+    <link name="${prefix}_mount3"/>
+    
+    <joint name="${prefix}_mount_mount3_joint" type="fixed">
+        <parent link="${prefix}_mount2" />
+        <child link = "${prefix}_mount3" />
+        <origin xyz="0.024 -0.07 0.0" rpy="0 0 0" />
+    </joint>
+
+    <!-- =========  camera mount link   ========= -->
+    <link name="${prefix}_camera_mount"/>
+
+    <joint name="${prefix}_camera_mount_joint" type="fixed">
+        <parent link="${prefix}_mount3" />
+        <child link = "${prefix}_camera_mount" />
+        <origin xyz="-0.023 0.012 0.01" rpy="0 -${M_PI/2} ${M_PI/2}" />
+    </joint>
+ 
+
+</xacro:macro>
+
+</robot>

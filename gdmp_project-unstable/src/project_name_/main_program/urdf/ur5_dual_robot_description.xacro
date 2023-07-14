@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<robot name="ur5_lwr4p_urdf" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ur5 -->
+<xacro:include filename="$(find ur_e_description)/urdf/ur5e.urdf.xacro" />
+<xacro:include filename="$(find lwr4p)/urdf/kuka_lwr_arm.xacro"/>
+
+
+<xacro:macro name="ur_robot" params="parent id *origin">
+
+  <!-- <xacro:property name="id" value="left" /> -->
+
+  <property name="robot_name" value="ur5_${id}"/>
+
+  <link name="${robot_name}_base_link" />
+
+  <joint name="${robot_name}_world_base_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}"/>
+      <child link="${robot_name}_base_link"/>
+  </joint>
+
+  <xacro:ur5e_robot prefix="${robot_name}:" joint_limited="false"/>
+
+  <joint name="${robot_name}:base_joint" type="fixed">
+    <parent link="${robot_name}_base_link" />
+    <child link = "${robot_name}:base_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0" />
+  </joint>
+
+  <link name="${id}_phri_tool">
+      <visual>
+          <geometry>
+              <mesh filename="package://main_program/meshes/phri_handle.dae"/>
+          </geometry>
+      </visual>
+  </link>
+
+  <joint name="${id}_phriTool_robot_joint" type="fixed">
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <parent link="${robot_name}:tool0"/>
+      <child link="${id}_phri_tool"/>
+  </joint>
+
+
+  <link name="${robot_name}_ee_link"/>
+
+  <joint name="${id}_phri_tool_{robot_name}:ee_joint" type="fixed">
+      <origin xyz="0 0 0.12" rpy="0 0 0"/>
+      <parent link="${robot_name}:tool0"/>
+      <child link="${robot_name}_ee_link"/>
+  </joint>
+
+</xacro:macro>
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+<xacro:ur_robot parent="world" id="left">
+  <origin xyz="-0.55 0 0" rpy="0 0 0" />
+</xacro:ur_robot>
+
+<xacro:ur_robot parent="world" id="right">
+  <origin xyz="0.55 0 0" rpy="0 0 0" />
+</xacro:ur_robot>
+
+
+
+</robot>

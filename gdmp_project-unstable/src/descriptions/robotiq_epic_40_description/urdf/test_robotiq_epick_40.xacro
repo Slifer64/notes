@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+
+<robot name="robotiq_epick_example" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:include filename="$(find descriptions)/robotiq_epic_40_description/urdf/robotiq_epick_40.urdf.xacro" />
+    
+    <link name="world"/>
+    <joint name="world_fixed" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="world"/>
+        <child link="gripper_root_link"/>
+    </joint>
+
+    <link name="gripper_root_link" />
+    
+    <xacro:robotiq_epick prefix="epick" parent="gripper_root_link" >
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    </xacro:robotiq_epick>
+    
+</robot>

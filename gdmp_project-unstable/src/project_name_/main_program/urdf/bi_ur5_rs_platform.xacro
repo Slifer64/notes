@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<robot name="robot_ur5_kol" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  Includes  ========
+-->
+
+<!-- ur5 -->
+<xacro:include filename="$(find ur_e_description)/urdf/ur5e.urdf.xacro" />
+
+<!-- rs d435i -->
+<xacro:include filename="$(find descriptions)/realsense2_description/urdf/_d435i.urdf.xacro" />
+<!-- rs adapter -->
+<xacro:include filename="$(find descriptions)/realsense2_description/urdf/rs_adapter.urdf.xacro" />
+
+<!-- robotic platform -->
+<xacro:include filename="$(find descriptions)/robotic_platform_description/urdf/robotic_platform.urdf.xacro" />
+
+<!-- RG2-FT gripper -->
+<xacro:include filename="$(find descriptions)/rg2_description/urdf/rg2_ft.urdf.xacro" />
+
+<!-- Epick40 gripper -->
+<xacro:include filename="$(find descriptions)/robotiq_epic_40_description/urdf/robotiq_epick_40.urdf.xacro" />
+
+
+<!--
+=========  Arguments  ========
+-->
+
+<xacro:arg name="robot_id" default="right" />   <!-- "left", "right", "both" -->
+<xacro:arg name="gripper" default="" />         <!-- "", "rg2_ft", "epick40" -->
+<xacro:arg name="load_camera" default="true" />
+
+
+<!--
+=========  MAIN  ========
+-->
+
+<xacro:property name="gripper" value="$(arg gripper)" />
+<xacro:property name="robot_id" default="$(arg robot_id)" />
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+<xacro:robotic_platform parent="world">
+    <origin xyz="0 0 0.8" rpy="0 0 0"/>
+</xacro:robotic_platform>
+
+<xacro:unless value="${robot_id == 'left'}">
+
+    <!-- =============  ur5 right ============= -->
+    <xacro:ur5e_robot prefix="ur5_right_" joint_limited="false"/>
+    <xacro:property name="robot_flange" value="ur5_right_tool0" />
+
+    <joint name="ur5_right_base_joint" type="fixed">
+        <parent link="robotic_platform_right_mount" />
+        <child link = "ur5_right_base_link" />
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0" />
+    </joint>
+
+    <!-- ===============  ee link  =================-->
+    <link name="ee_link"/>
+
+    <xacro:if value="${gripper == ''}">
+        <!-- ===============   No gripper  =================-->
+        <joint name="ur5_right_ee_joint" type="fixed">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <parent link="${robot_flange}"/>
+            <child link="ee_link"/>
+        </joint>
+    </xacro:if>
+
+    <xacro:if value="${gripper == 'rg2_ft'}">
+        <!-- ===============   RG2FT gripper  =================-->
+        <xacro:rg2_ft name="rg2_ft" parent="${robot_flange}">
+            <origin xyz="0 0 0" rpy="0 -1.5708 1.5708"/>
+        </xacro:rg2_ft>
+
+        <joint name="ur5_right_ee_joint" type="fixed">
+            <origin xyz="0 0 0.2" rpy="0 0 0"/>
+            <parent link="${robot_flange}"/>
+            <child link="ee_link"/>
+        </joint>
+    </xacro:if>
+
+    <xacro:if value="${gripper == 'epick40'}">
+        <!-- ===============   Epick40 gripper  =================-->
+        <xacro:robotiq_epick prefix="epick40" parent="${robot_flange}" >
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        </xacro:robotiq_epick>
+
+        <joint name="ur5_right_ee_joint" type="fixed">
+            <origin xyz="0.0 0 0" rpy="0 0 0"/>
+            <parent link="epick40_ee_link"/>
+            <child link="ee_link"/>
+        </joint>
+
+    </xacro:if>
+
+
+</xacro:unless>
+    
+
+<xacro:unless value="${robot_id == 'right'}">
+
+    <!-- =============  ur5 left ============= -->
+    <xacro:ur5e_robot prefix="ur5_left_" joint_limited="false"/>
+
+    <joint name="ur5_left_base_joint" type="fixed">
+    <parent link="robotic_platform_left_mount" />
+    <child link = "ur5_left_base_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0" />
+    </joint>
+
+    <!-- =========   camera adapter   ========= -->
+    <xacro:rs_adapter prefix="cam_adapter" parent="ur5_left_tool0" />
+
+    <!-- =========   camera sensor   ========= -->
+    <xacro:sensor_d435i parent="cam_adapter_camera_mount" name="rs2" use_nominal_extrinsics="true">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:sensor_d435i>
+
+</xacro:unless>
+
+<xacro:if value="$(arg load_camera)">
+    <!-- ===============  camera  =================--> 
+    <xacro:sensor_d435i name="cam_rs2" parent="robotic_platform_base_link" use_nominal_extrinsics="true">
+        <origin xyz="100 100 100" rpy="0 0 0"/>
+    </xacro:sensor_d435i>
+</xacro:if>
+
+</robot>

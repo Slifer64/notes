@@ -1,0 +1,4 @@
+<launch> 
+  <node name="socat_node" pkg="robotic_epick40" type="socat.sh" output="screen"/>
+  <node name="robotiq_epick_ontroller_node" pkg="robotic_epick40" type="robotic_epick40_node" output="screen"/>
+</launch> 

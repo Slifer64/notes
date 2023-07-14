@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  INCLUDES  ========
+-->
+
+<!-- lwr4p -->
+<xacro:include filename="$(find descriptions)/lwr4p_description/urdf/lwr4p.urdf.xacro" />
+
+
+<!--
+=========  PARAMS  ========
+- parent              : the parent link
+- prefix              : the prefix for all constructed links/joints                                          (default='lwr4p')
+- *robot_base_origin  : an origin block specifying the origin of the robot's base w.r.t. the parent link
+- ee_frame_pos        : position of the end-effector frame w.r.t. the tool-tip                               (default='0 0 0' the robot's flange)
+- ee_frame_orient     : orientation of the end-effector frame w.r.t. the tool-tip                            (default='0 0 0')
+- right               : 1 for right, -1 for left                                                             (default=1, right)
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}_base_link            :  the lwr4p robot's base link
+- ${prefix}_ee_link              :  the end-effector link (default: the tip of the pHRI tool) 
+- ${prefix}:_arm_7_link          :  robot's flange
+-->
+
+<xacro:macro name="lwr4p_notool_robot" 
+    params="
+        parent
+        prefix:='lwr4p' 
+        *robot_base_origin 
+        ee_frame_pos:='0 0 0' 
+        ee_frame_orient:='0 0 0'
+        right:=1
+    ">
+
+  <!-- =========   base link   ========= -->
+  <link name="${prefix}_base_link" />
+
+  <joint name="${prefix}_world_base_joint" type="fixed">
+      <xacro:insert_block name="robot_base_origin" />
+      <parent link="${parent}"/>
+      <child link="${prefix}_base_link"/>
+  </joint>
+
+  <!-- =========   robot   ========= -->
+  <xacro:kuka_lwr_arm parent="${prefix}_base_link" name="${prefix}:" right="${right}" tool_name=""/>
+
+  <!-- =========   ee link   ========= -->
+  <link name="${prefix}_ee_link"/>
+
+  <joint name="${prefix}_ee_joint" type="fixed">
+    <origin xyz="${ee_frame_pos}" rpy="${ee_frame_orient}"/>
+    <parent link="${prefix}:_arm_7_link"/>
+    <child link="${prefix}_ee_link"/>
+  </joint>
+
+</xacro:macro>
+
+</robot>
+

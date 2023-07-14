@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="use_sim" default="false" />
+
+    <param name="my_robot_description" command="$(find xacro)/xacro.py '$(find robot_camera_tf_publisher)/urdf/lwr4pCam_description.xacro'" />
+
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find robot_camera_tf_publisher)/rviz/config.rviz" output="screen" required="true"/>
+
+    <!-- launch-prefix="xterm -fa monaco -fs 13 -e gdb -args" -->
+
+    <node name="robot_camera_tf_publisher_node" pkg="robot_camera_tf_publisher" type="robot_camera_tf_publisher" 
+          output="screen" required="true">
+
+        <param name="use_sim" value="$(arg use_sim)"/>
+
+        <rosparam>
+
+            ctrl_cycle: 0.002
+            q_start: [1.91 , 0.628 , -0.412 , -0.6 , 0 , 0.8 , 1.3]
+
+            robot_type: "lwr4p"
+            robot_description_name: "/my_robot_description"
+            base_link: "main_base_link"  # the link w.r.t. which the camera tranform is published
+            camera_color_optical_link: "lwr4pCam_rs_d435i_color_optical_frame"
+            tf_publish_topic: "/robot_camera_tf"
+            
+        </rosparam>
+
+    </node>
+
+</launch>

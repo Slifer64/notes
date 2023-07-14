@@ -1,0 +1,8 @@
+
+operations_tags_map:
+  [
+    {name: 'pick',  id: 0, tags: [0, 1, 2]},
+    {name: 'place', id: 1, tags: [3, 4, 5]},
+    {name: 'other', id: 2, tags: [6, 7]}
+  ]
+  

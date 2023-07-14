@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot name="robot_platform_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:include filename="$(find descriptions)/robotic_platform_description/urdf/robotic_platform.urdf.xacro" />
+
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+
+<xacro:robotic_platform parent="world">
+    <origin xyz="0 0 0.8" rpy="0 0 0"/>
+</xacro:robotic_platform>
+
+</robot>

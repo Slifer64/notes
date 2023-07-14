@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  PARAMS  ========
+- parent       : the parent link
+- prefix       : the prefix for all constructed links/joints     (default='ati_mini_40')
+- *origin      : pose w.r.t. the parent link
+-->
+
+
+<!--
+=========  LINKS  ========
+- ${prefix}_sensor       :  located at the base (bottom) of the sensor
+- ${prefix}_sensor_tip   :  located at the tip of the sensor
+-->
+
+<xacro:macro name="ati_mini_40" 
+    params="
+        parent
+        prefix:='ati_mini_40' 
+        *origin 
+    ">
+
+  <!-- =========   ati_mini_40 link   ========= -->
+  <link name="${prefix}_sensor">
+    <visual>
+      <geometry>
+        <mesh filename="package://descriptions/ati_sensor_description/meshes/ati_mini_40_complete.STL"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.5 0.5 0.5 1"/>
+    </material>
+    </visual>
+  </link>
+
+    <joint name="${prefix}_sensor_parent_joint" type="fixed">
+        <xacro:insert_block name="origin" />
+        <parent link="${parent}"/>
+        <child link="${prefix}_sensor"/>
+    </joint>
+
+
+    <!-- =========  ati_mini_40 tip link  =========-->
+
+    <link name="${prefix}_sensor_tip"/>
+
+    <joint name="${prefix}_sensor_tip_parent_joint" type="fixed">
+        <origin xyz="0.0 0.0 0.0343" rpy="0.0 0.0 0" />
+        <parent link="${prefix}_sensor"/>
+        <child link="${prefix}_sensor_tip"/>
+    </joint>
+
+</xacro:macro>
+
+</robot>
+

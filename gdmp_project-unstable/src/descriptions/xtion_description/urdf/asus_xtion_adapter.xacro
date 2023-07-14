@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="asus_xtion_adapter">
+  <!-- Create the link of the asus xtion adapter -->
+  <link name="asus_xtion_adapter_base">
+    <visual>
+      <geometry>
+        <mesh filename="package://descriptions/xtion_description/meshes/asus_xtion_adapter.dae"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- Finally a dummy link and joint for the tool frame -->
+  <joint name="asus_xtion_adapter_base_to_tool" type="fixed">
+    <parent link="asus_xtion_adapter_base" />
+    <child link = "asus_xtion_adapter_tool" />
+    <origin xyz="0.0 -0.08847 -0.012" rpy="1.57079632679 0 0" />
+  </joint>
+  <link name="asus_xtion_adapter_tool"/>
+
+</robot>
+

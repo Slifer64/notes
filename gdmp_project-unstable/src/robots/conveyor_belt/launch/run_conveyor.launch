@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="speed" default="0" />
+
+
+    <node pkg="atv12" type="run_conveyor" name="run_conveyor_nide" output="screen" required="true">
+      
+      <param name="start_speed" type="double" value="$(arg speed)" />
+
+      <rosparam>
+
+        receive_cmds_topic: "/atv12"
+
+      </rosparam>
+
+    </node>
+
+</launch>

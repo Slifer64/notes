@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<robot name="robotic_platform" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!--
+=========  PARAMS  ========
+- parent       : the parent link
+- prefix       : the prefix for all constructed links/joints   (default='robotic_platform_')
+- *origin      : pose w.r.t. the parent link
+-->
+
+<!--
+=========  LINKS  ========
+- ${prefix}base_link     :  located at the base of the platform
+- ${prefix}right_mount   :  located at the right mount position
+- ${prefix}left_mount    :  located at the left mount position
+-->
+
+<!--
+    To view platform run:
+    $ roslaunch descriptions robotic_platform_description.launch
+-->
+
+<xacro:macro name="robotic_platform" params="parent prefix:='robotic_platform_' *origin">
+
+    <!-- ===============   platform  =================-->
+    <link name="${prefix}base_link">
+        <visual>
+            <geometry>
+                <mesh filename="package://descriptions/robotic_platform_description/meshes/VentionAssembly_2arm_simplified.STL"/>
+            </geometry>
+
+            <material name="platform_color">
+            <color rgba="0 0.6 0.6 1"/>
+        </material>
+        </visual>
+    </link>
+
+    <joint name="world_to_${prefix}joint" type="fixed">
+        <xacro:insert_block name="origin"/>
+        <origin xyz="0 0 0.8" rpy="0 0 0"/>
+        <parent link="${parent}"/>
+        <child link="${prefix}base_link"/>
+    </joint>
+
+    <!-- ===============   right arm mount  =================-->
+
+    <link name="${prefix}right_mount_0" />
+
+    <joint name="${prefix}link_right_mount_0" type="fixed">
+        <origin xyz="0 0 0" rpy="0.785398 0 0"/>
+        <parent link="${prefix}base_link"/>
+        <child link="${prefix}right_mount_0"/>
+    </joint>
+
+    <link name="${prefix}right_mount" />
+
+    <joint name="platform_base_link_right_joint" type="fixed">
+        <origin xyz="0 -0.0145 0.1535" rpy="0 0 0"/>
+        <parent link="${prefix}right_mount_0"/>
+        <child link="${prefix}right_mount"/>
+    </joint>
+
+
+    <!-- ===============   left arm mount  =================-->
+
+    <link name="${prefix}left_mount_0" />
+
+    <joint name="${prefix}link_left_mount_0" type="fixed">
+        <origin xyz="0 0 0" rpy="-0.785398 0 0"/>
+        <parent link="${prefix}base_link"/>
+        <child link="${prefix}left_mount_0"/>
+    </joint>
+
+    <link name="${prefix}left_mount" />
+
+    <joint name="platform_base_link_left_joint" type="fixed">
+        <origin xyz="0 0.0145 0.1535" rpy="0 0 3.1415926"/>
+        <parent link="${prefix}left_mount_0"/>
+        <child link="${prefix}left_mount"/>
+    </joint>
+
+</xacro:macro>
+
+
+</robot>

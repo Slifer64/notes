@@ -1,0 +1,9 @@
+<launch>
+
+  <param name="robot_description" command="$(find xacro)/xacro '$(find descriptions)/robotiq_epic_40_description/urdf/test_robotiq_epick_40.xacro'"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find descriptions)/robotiq_epic_40_description/rviz/robotiq_epick_40.rviz" required="true" />
+</launch>

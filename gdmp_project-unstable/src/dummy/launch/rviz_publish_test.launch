@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<launch>
+
+   <!-- <param name="robot_description" command="$(find xacro)/xacro.py '$(find dummy)/urdf/scene.xacro'" /> -->
+
+    <node name="rviz_node" pkg="rviz" type="rviz" respawn="false" args="-d $(find dummy)/rviz/cfg.rviz" output="screen" required="true"/>
+
+    <node pkg="dummy" type="rviz_publish_test" name="rviz_publish_test_node"
+          output="screen" required="true">
+
+        <rosparam>
+
+        </rosparam>
+
+    </node>
+
+</launch>

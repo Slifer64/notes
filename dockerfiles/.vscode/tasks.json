@@ -1,0 +1,104 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "flake8",
+      "type": "shell",
+      "command": "flake8 .",
+      "problemMatcher": [
+        {
+          "owner": "flake8",
+          "source": "flake8",
+          "pattern": [
+            {
+              "code": 4,
+              "column": 3,
+              "file": 1,
+              "line": 2,
+              "message": 5,
+              "regexp": "^(.+):(\\d+):(\\d+): (\\w\\d+) (.+)$"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "pydocstyle",
+      "type": "shell",
+      "command": "pydocstyle .",
+      "problemMatcher": [
+        {
+          "owner": "pydocstyle",
+          "source": "pydocstyle",
+          "pattern": [
+            {
+              "regexp": "^(.*):(\\d*).*:",
+              "file": 1,
+              "line": 2
+            },
+            {
+              "regexp": "^\\s*(.*): (.*)",
+              "code": 1,
+              "message": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "test",
+      "dependsOn": [
+        "flake8",
+        "pydocstyle"
+      ]
+    },
+    {
+      "label": "generate",
+      "type": "shell",
+      "command": "./generate.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "./build.py ${input:build_name}",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "upgrade",
+      "type": "shell",
+      "command": " pip install --upgrade pip; for i in $(pip list -o | awk 'NR > 2 {print $1}'); do pip install -U $i; done && pip freeze > requirements.txt",
+      "problemMatcher": []
+    },
+    {
+      "label": "install",
+      "type": "shell",
+      "command": "pip3 install -r requirements.txt",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "build_name",
+      "type": "pickString",
+      "description": "name of the image to build",
+      "options": [
+        "noetic",
+        "iron",
+        "iron-cuda",
+        "humble",
+        "humble-cuda",
+        "gazebo11",
+        "fortress",
+        "citadel",
+        "garden",
+        "all"
+      ],
+      "default": "foxy"
+    }
+  ]
+}

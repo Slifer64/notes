@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<!--    <group if="$(arg use_global_gui)">-->
+
+      <node pkg="global_gui" type="global_gui" name="global_gui"
+            output="screen" cwd="node" required="true"/>
+
+<!--    </group>-->
+
+
+</launch>

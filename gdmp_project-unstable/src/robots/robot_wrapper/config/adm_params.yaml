@@ -1,0 +1,15 @@
+# =======  ADMITTANCE CONTROLLER PARAMS  =========
+
+Mp: 10 # cart pos inertia
+Dp_min: 40
+Dp_max: 250
+
+Mo: 2 # cart orient inertia
+Do_min: 5 # cart orient damping
+Do_max: 20
+
+lambda_P: 5
+
+a_f: 0.01 # filtering coeff for wrench (1: no filtering)
+
+# enabled_dofs: [ 0; 0; 0; 0; 0; 0 ]

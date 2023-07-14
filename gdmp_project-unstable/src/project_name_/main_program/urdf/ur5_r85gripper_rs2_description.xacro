@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<robot name="robot_ur5_r85griger_rs2" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+<!-- ur5, r85_gripper -->
+<xacro:include filename="$(find descriptions)/robots/ur5e_robotiq85gripper.urdf.xacro" />
+
+<xacro:include filename="$(find descriptions)/realsense2_description/urdf/_d435i.urdf.xacro"/>
+
+
+<!-- =============  Base-link  ============= -->
+<link name="world" />
+<link name="base_link" />
+
+<joint name="world_base_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+</joint>
+
+<!-- =============  ur5  ============= -->
+
+<xacro:property name="robot_name" value="ur5" />
+
+<xacro:ur5e_r85gripper_robot parent="base_link" prefix="${robot_name}">
+  <origin xyz="0 0 0" rpy="0 0 0" />
+</xacro:ur5e_r85gripper_robot>
+
+<!-- ===============  ee link  =================-->
+<link name="ee_link"/>
+
+<joint name="${robot_name}_ee_joint" type="fixed">
+    <origin xyz="0 0 0.2" rpy="0 0 0"/>
+    <parent link="${robot_name}:tool0"/>
+    <child link="ee_link"/>
+</joint>
+
+<!-- ===============  camera  =================--> 
+<xacro:sensor_d435i name="rs2" parent="base_link" use_nominal_extrinsics="true">
+    <origin xyz="100 100 100" rpy="0 0 0"/>
+</xacro:sensor_d435i>
+
+
+</robot>
