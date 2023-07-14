@@ -55,9 +55,13 @@ config_file = my_pkg_path / 'config/params.yaml'
 ## Load robot description
 
 ```python
-robot_urdf_xacro = str(get_package_share_path('my_package') / 'urdf/robot_urdf.xacro')
+robot_urdf_xacro = os.path.join(get_package_share_path('my_package'), 'urdf/robot_urdf.xacro')
 
 robot_description = ParameterValue(Command(['xacro ', robot_urdf_xacro]), value_type=str)
+
+## or load it directly without creating a ros-param:
+# import xacro
+# robot_description = xacro.process_file(robot_urdf_xacro).toxml()
 
 # example use case
 robot_state_publisher_node = Node(

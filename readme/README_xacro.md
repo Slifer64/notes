@@ -161,6 +161,11 @@ Usage: `<material name="orange"/>`
         <material name="orange"/>
     </visual>
 
+    <!-- additional visual can be specified
+    <visual>
+        ...
+    </visual> -->
+    
     <!-- colision (usually the same as visual, without the material) -->
     <collision>
         <origin xyz="${chassis_length/2} 0 ${chassis_height/2}"/>
@@ -168,6 +173,11 @@ Usage: `<material name="orange"/>`
             <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
         </geometry>
     </collision>
+    <!-- additional collision can be specified
+    <collision>
+        ...
+    </collision> -->
+    
     <!-- inertia -->
     <xacro:inertial_box mass="0.5" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}">
         <origin xyz="${chassis_length/2} 0 ${chassis_height/2}" rpy="0 0 0"/>
@@ -206,6 +216,7 @@ Usage: `<material name="orange"/>`
 </link>
 ```
 
+Multiple `visual` and/or `colision` tags can be specified within the same `link`.
 
 ---
 
@@ -233,6 +244,7 @@ Usage: `<material name="orange"/>`
 ```
 For `type=revolute`, `<limit ... />` must be specified. \
 Otherwise, use `type=continuous`.
+
 
 ---
 
