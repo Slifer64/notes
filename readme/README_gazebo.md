@@ -1,15 +1,5 @@
 # Gazebo
 
-## Version check
-
-```bash
-gazebo --version
-which gzserver
-which gzclient
-```
-
----
-
 ## Install
 ```bash
 sudo apt-get install ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-gazebo-ros-control
@@ -18,6 +8,13 @@ sudo apt-get install ros-$ROS_DISTRO-gazebo-ros-pkgs ros-$ROS_DISTRO-gazebo-ros-
 Check your installation:
 ```bash
 ros2 pkg list | grep gazebo
+```
+
+Version check:
+```bash
+gazebo --version
+which gzserver
+which gzclient
 ```
 
 ---
@@ -71,17 +68,36 @@ spawn_entity = Node(
 )
 ```
 
-## Gazebo tags in xacro
+## Gazebo tags
 ```xml
-<!-- colors -->
-<gazebo reference="my_link">
+<!-- reference an existing link -->
+<gazebo reference="<link_name>">
+
+    <!-- color -->
     <material>Gazebo/Green</material>
+
+    <!-- friction coefficients -->
+        <mu1 vakue="0.001"/>
+        <mu2 vakue="0.001"/>
+
+    <!-- sensor -->
+    <sensor type="<builtin_sensor_type>" name="<my_sensor_name>">
+        <!-- sensor params -->
+
+        <!-- plugin to handle the sensor -->
+        <plugin name="<builtin_plugin_name>" filename="libgazebo_ros_<plugin>.so">
+            <!-- plugin params -->
+        </plugin>
+    </sensor>
 </gazebo>
 ```
 
+---
+
+## `joint_state_publisher`
+
 ```xml
-<!-- *** joint_state_publisher ***
-publish the joint_states for the selected joints (which robot_state_publisher can then use to broadcast the approprate tf). -->
+<!-- publish the joint_states for the selected joints (which robot_state_publisher can then use to broadcast the approprate tf). -->
 
 <gazebo>
     <plugin name="gazebo_ros_joint_state_publisher"
@@ -94,9 +110,12 @@ publish the joint_states for the selected joints (which robot_state_publisher ca
 </gazebo>
 ```
 
+---
+
+## `joint_pose_trajectory`
+
 ```xml
-<!-- *** joint_pose_trajectory ***
-    reads JointTrajectory message from the topic 
+<!-- reads JointTrajectory message from the topic 
     /set_joint_trajectory 
     and moves the robot accordingly. -->
 
@@ -107,59 +126,204 @@ publish the joint_states for the selected joints (which robot_state_publisher ca
     </plugin>
 </gazebo>
 ```
+Example command message:
+```bash
+ros2 topic pub -1 /set_joint_trajectory trajectory_msgs/msg/JointTrajectory '{header: {frame_id: world}, joint_names: [slider_joint, arm_joint], points: [  {positions: {0.8,0.6}} ]}'
+```
+---
+
+## `camera sensor`
+
+Define camera and optical link:
+
+<p align="left">
+  <img src="resources/camera_links.png" width="400" title="hover text">
+</p>
 
 ```xml
-<!-- *** camera/depth sensor *** 
-An extra joint/link is required to create an "optical frame" for the sensor. For more see https://www.ros.org/reps/rep-0103.html#suffix-frames -->
-
-<!-- First, create the link and joint for the optical frame -->
-<joint name="camera_optical_joint" type="fixed">
-    <origin xyz="0 0 0" rpy="-1.571 0 -1.571" />
-    <parent link="camera_link" />
-    <child link="camera_link_optical" />
+<joint name="camera_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="camera_link"/>
+    <origin xyz="0.276 0 0.181" rpy="0 0.18 0"/>
 </joint>
 
-<!-- camera_link must be the predifined link for the camera -->
+<link name="camera_link">
+    <visual>
+        <geometry>
+            <box size="0.010 0.03 0.03"/>
+        </geometry>
+        <material name="black"/>
+    </visual>
+    <visual>
+        <origin xyz="0 0 -0.05"/>
+        <geometry>
+            <cylinder radius="0.002" length="0.1"/>
+        </geometry>
+        <material name="black"/>
+    </visual>
+</link>
+
+<!-- An extra joint/link is required to create an "optical frame" for the sensor. For more see https://www.ros.org/reps/rep-0103.html#suffix-frames -->
+
+<joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_link_optical"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+</joint>
 
 <link name="camera_link_optical"></link>
+```
 
-<!-- Add a gazebo tag for the ORIGINAL camera_link (but in the plugin we reference the optical frame so that ROS can orient things correctly) -->
-<!-- Although visualise is set to true, it won't actually visualise the depth camera in gazebo. To see the preview, swap "depth" to "camera"-->
+For **`image sensor`**:
+```xml
 <gazebo reference="camera_link">
-    <sensor type="depth" name="my_camera">  <!-- For RGB only: <sensor type="camera" ...> -->
-        <update_rate>20</update_rate>
+    <material>Gazebo/Black</material>
+
+    <sensor name="camera" type="camera">
+        <pose> 0 0 0 0 0 0 </pose>
+        <!-- To visualize img in gazebo. -->
         <visualize>true</visualize>
-        <camera name="cam">
-            <horizontal_fov>1.3962634</horizontal_fov>
+        <update_rate>10</update_rate>
+        <camera>
+            <horizontal_fov>1.089</horizontal_fov> <!-- rads -->
             <image>
+                <!-- 8-bits for red/gree/blue -->
+                <format>R8G8B8</format> 
                 <width>640</width>
                 <height>480</height>
-                <format>R8B8G8</format>
             </image>
             <clip>
-                <near>0.02</near>
-                <far>300</far>
+                <near>0.05</near>
+                <far>8.0</far>
             </clip>
-            <noise>
+            <!-- <noise>
                 <type>gaussian</type>
                 <mean>0.0</mean>
                 <stddev>0.007</stddev>
-            </noise>
+            </noise> -->
         </camera>
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
             <frame_name>camera_link_optical</frame_name>
-            <min_depth>0.1</min_depth>
-            <max_depth>500</max_depth>
         </plugin>
     </sensor>
 </gazebo>
 ```
-Note also:
-- Add damping to the joints to stop them it flopping around. e.g. `<dynamics damping="10.0" friction="10.0"/>`
-- Example message for `gazebo_ros_joint_pose_trajectory`:
-    ```bash
-    ros2 topic pub -1 /set_joint_trajectory trajectory_msgs/msg/JointTrajectory  '{header: {frame_id: world}, joint_names: [slider_joint, arm_joint], points: [  {positions: {0.8,0.6}} ]}'
-    ```
-    
+
+For **`depth sensor`**:
+```xml
+<gazebo reference="camera_link">
+    <material>Gazebo/Red</material>
+
+    <sensor name="camera" type="depth">
+        <pose> 0 0 0 0 0 0 </pose>
+        <!-- Although visualise is set to true, it won't 
+        actuallyvisualise the depth camera in gazebo. -->
+        <visualize>true</visualize>
+        <update_rate>10</update_rate>
+        <camera>
+            <horizontal_fov>1.089</horizontal_fov>
+            <image>
+                <!-- for depth, use BGR instead of RGB -->
+                <format>B8G8R8</format>
+                <width>640</width>
+                <height>480</height>
+            </image>
+            <clip>
+                <near>0.05</near>
+                <far>8.0</far>
+            </clip>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+            <frame_name>camera_link_optical</frame_name>
+            <min_depth>0.1</min_depth>
+            <max_depth>100.0</max_depth>
+        </plugin>
+    </sensor>
+</gazebo>
+```
+Notice that the gazebo tag references the `camera_link`, while the `camera_controller plugin` uses the `camera_link_optical`.
 
 ---
+
+## `lidar`
+```xml
+<gazebo reference="laser_frame">
+    <material>Gazebo/Black</material>
+
+    <sensor name="laser" type="ray">
+        <pose> 0 0 0 0 0 0 </pose>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <ray>
+            <scan>
+                <horizontal>
+                    <samples>360</samples>
+                    <min_angle>-3.14</min_angle>
+                    <max_angle>3.14</max_angle>
+                </horizontal>
+            </scan>
+            <range>
+                <min>0.3</min>
+                <max>12</max>
+            </range>
+        </ray>
+        <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+            <ros>
+                <argument>~/out:=my_scan_topic</argument> <!-- msgs will be published to '/my_scan_topic' -->
+            </ros>
+            <output_type>sensor_msgs/LaserScan</output_type>
+            <frame_name>laser_frame</frame_name>
+        </plugin>
+    </sensor>
+</gazebo>
+
+```
+
+Example code for `laser_frame`:
+```xml
+<joint name="laser_joint" type="fixed">
+    <parent link="<laser_parent_link>"/>
+    <child link="laser_frame"/>
+    <origin xyz="0.122 0 0.212" rpy="0 0 0"/>
+</joint>
+
+<link name="laser_frame">
+    <visual>
+        <geometry>
+            <cylinder radius="0.05" length="0.04"/>
+        </geometry>
+        <material name="black"/>
+    </visual>
+    <visual>
+        <origin xyz="0 0 -0.05"/>
+        <geometry>
+            <cylinder radius="0.01" length="0.1"/>
+        </geometry>
+        <material name="black"/>
+    </visual>
+    <collision>
+        <geometry>
+            <cylinder radius="0.05" length="0.04"/>
+        </geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="0.1" length="0.04" radius="0.05">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_cylinder>
+</link>
+```
+
+---
+
+## Teleop
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+``` 
+
+---
+
+## Notes
+
+- `odom` frame tells us where the robot is w.r.t. the initial gazebo pose of the robot.
+- Add damping to the joints to stop them it flopping around. e.g. `<dynamics damping="10.0" friction="10.0"/>`
+- Define `inertia` for `links` attached to **not-fixed** `joints`.
