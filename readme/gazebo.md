@@ -36,19 +36,22 @@ world_arg = DeclareLaunchArgument(name='world',
     default_value = os.path.join(get_package_share_path('my_package'), 'worlds/my_world.world'),
     description='Full path to the world model file to load')
 
-gazebo = Node(
-    package='gazebo_ros',
-    executable='gazebo.launch.py',
-)
-
 gazebo = IncludeLaunchDescription(
-    PythonLaunchDescriptionSource([os.path.join(
-        get_package_share_directory('gazebo_ros'),'launch','gazebo.launch.py'
+    PythonLaunchDescriptionSource([
+        os.path.join(get_package_share_directory('gazebo_ros'),'launch','gazebo.launch.py'
     )]),
-    launch_arguments={'world': LaunchConfiguration('world')}.items()
+    launch_arguments={
+        'world': LaunchConfiguration('world'),
+        'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file}.items()
 )
 ```
-The `world` argument is optional. If ommited, an empty world will be loaded.
+- The `world` argument is optional. If ommited, an empty world will be loaded.
+- The yaml `gazebo_params_file` can look like this:
+```yaml
+gazebo:
+  ros__parameters:
+    publish_rate: 400.0 # Hz, the rate at which gazebo publishes joints, sensor msgs etc.
+```
 
 ---
 
@@ -179,7 +182,7 @@ For **`image sensor`**:
 <gazebo reference="camera_link">
     <material>Gazebo/Black</material>
 
-    <sensor name="camera" type="camera">
+    <sensor name="my_camera" type="camera">
         <pose> 0 0 0 0 0 0 </pose>
         <!-- To visualize img in gazebo. -->
         <visualize>true</visualize>
@@ -214,7 +217,7 @@ For **`depth sensor`**:
 <gazebo reference="camera_link">
     <material>Gazebo/Red</material>
 
-    <sensor name="camera" type="depth">
+    <sensor name="my_camera" type="depth">
         <pose> 0 0 0 0 0 0 </pose>
         <!-- Although visualise is set to true, it won't 
         actuallyvisualise the depth camera in gazebo. -->
@@ -241,7 +244,13 @@ For **`depth sensor`**:
     </sensor>
 </gazebo>
 ```
-Notice that the gazebo tag references the `camera_link`, while the `camera_controller plugin` uses the `camera_link_optical`.
+- Topics are prefixed by `/<sensor:name>/`, i.e.:
+    ```bash
+    /my_camera/image_raw
+    /my_camera/camera_info
+    /my_camera/...
+    ```
+- The gazebo tag references the `camera_link`, while the `camera_controller plugin` uses the `camera_link_optical`.
 
 ---
 
@@ -278,7 +287,7 @@ Notice that the gazebo tag references the `camera_link`, while the `camera_contr
 </gazebo>
 
 ```
-
+Messages are published to `/my_scan_topic`. \
 Example code for `laser_frame`:
 ```xml
 <joint name="laser_joint" type="fixed">

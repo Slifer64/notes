@@ -39,9 +39,39 @@ ros2 node info /my_turtle
 # **Remapping**
 
 ```bash
-ros2 run turtlesim turtlesim_node --ros-args --remap __node:=my_turtle
+ros2 run turtlesim turtlesim_node --ros-args --remap __node:=my_turtle # or -r __node:=my_turtle
 ros2 run turtlesim turtle_teleop_key --ros-args --remap turtle1/cmd_vel:=turtle2/cmd_vel
 ```
+---
+
+# Pass parameters to a node 
+
+From **command line**:
+```bash
+ros2 run demo_nodes_cpp parameter_blackboard --ros-args -p some_int:=42 -p "a_string:=Hello world" -p "some_lists.some_integers:=[1, 2, 3, 4]" -p "some_lists.some_doubles:=[3.14, 2.718]"
+```
+
+From **yaml**:
+```bash
+ros2 run demo_nodes_cpp parameter_blackboard --ros-args --params-file $(ros2 pkg prefix --share my_package)/config/my_params.yaml
+```
+
+where `my_params.yaml` is:
+```yaml
+parameter_blackboard:
+    ros__parameters:
+        some_int: 42
+        a_string: "Hello world"
+        some_lists:
+            some_integers: [1, 2, 3, 4]
+            some_doubles : [3.14, 2.718]
+```
+
+**Mixed** (command line and yaml):
+```bash
+ros2 run demo_nodes_cpp parameter_blackboard --ros-args -p my_param1:=value1 -p my_param2:=value2 --params-file my_file.yaml
+```
+
 ---
 
 # ros2 **topics**
@@ -345,11 +375,6 @@ rosdep install --from-paths src -y --ignore-src
 
 ---
 
-# c++ publisher-subscriber
-```bash
-ros2 pkg create --build-type ament_cmake cpp_pubsub
-```
-
 
 # Interfaces
 
@@ -461,14 +486,14 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix --share turtle_tf2_py)/rviz/turtle_rvi
 
 # MISC
 
-# Find package path
+## Find package path
 ```bash
 $(ros2 pkg prefix --share turtle_tf2_py)
 # e.g.
 ros2 run rviz2 rviz2 -d $(ros2 pkg prefix --share turtle_tf2_py)/rviz/turtle_rviz.rviz
 ```
 
-# Launch with rel package path
+## Launch with rel package path
 ```bash
 ros2 launch urdf_tutorial display.launch.py model:=`ros2 pkg prefix --share urdf_tutorial`/urdf/01-myfirst.urdf
 ```

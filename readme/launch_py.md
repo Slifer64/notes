@@ -4,17 +4,15 @@
 
 ```python
 import os
-from ament_index_python.packages import get_package_share_path, get_package_share_directory  # get pkg path
-from launch_ros.actions import Node # create ros nodes
-from launch import LaunchDescription # generate the final launch description
-from launch.conditions import IfCondition, UnlessCondition  # conditional launch node
-from launch.substitutions import Command # execute a bash command
-from launch_ros.parameter_descriptions import ParameterValue # define a param
-from launch.actions import DeclareLaunchArgument # define a launch argument
-from launch.substitutions import LaunchConfiguration # retrieve the value of an argument
-from launch.substitutions import AndSubstitution, OrSubstitution, NotSubstitution # for composite conditions
-from launch.actions import IncludeLaunchDescription # include another launch file
-from launch.launch_description_sources import PythonLaunchDescriptionSource # wrapper for the path to `IncludeLaunchDescription`
+from ament_index_python.packages import get_package_share_path, get_package_share_directory
+from launch_ros.actions import Node
+from launch import LaunchDescription
+from launch.conditions import IfCondition, UnlessCondition 
+from launch_ros.parameter_descriptions import ParameterValue 
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction, GroupAction, RegisterEventHandler, IncludeLaunchDescription, TimerAction
+from launch.event_handlers import OnProcessStart
+from launch.substitutions import LaunchConfiguration, Command, PythonExpression, AndSubstitution, OrSubstitution, NotSubstitution 
+from launch.launch_description_sources import PythonLaunchDescriptionSource 
 
 def generate_launch_description():
     return LaunchDescription([
@@ -27,12 +25,10 @@ def generate_launch_description():
 
 ```python
 # argument with choices
-sim_arg = DeclareLaunchArgument(name='sim', default_value='true', choices=['true', 'false'],
-                                    description='Flag to enable joint_state_publisher_gui')
+sim_arg = DeclareLaunchArgument(name='sim', default_value='true', choices=['true', 'false'], description='Flag to enable joint_state_publisher_gui')
 
 default_msg_value = 'hell@ w@rld!'.replace('@','o')
-msg_arg = DeclareLaunchArgument(name='model', default_value=str(default_msg_value),
-                                    description='A welcome message...')
+msg_arg = DeclareLaunchArgument(name='model', default_value=str(default_msg_value), description='A welcome message...')
 
 
 return LaunchDescription([
@@ -42,12 +38,17 @@ return LaunchDescription([
     ])                                 
 ```
 
+View arguments of a launch file with `--show-args`:
+```bash
+ros2 launch launch_tutorial example_substitutions.launch.py --show-args
+```
+
 ---
 
 ## Package relative path
 ```python
 my_pkg_path = get_package_share_path('my_package')
-config_file = my_pkg_path / 'config/params.yaml'
+config_file = os.path.join(my_pkg_path, 'config/params.yaml')
 ```
 
 ---
@@ -55,13 +56,20 @@ config_file = my_pkg_path / 'config/params.yaml'
 ## Load robot description
 
 ```python
-robot_urdf_xacro = os.path.join(get_package_share_path('my_package'), 'urdf/robot_urdf.xacro')
+xacro_file = os.path.join(get_package_share_path('my_package'), 'urdf/robot_urdf.xacro')
 
-robot_description = ParameterValue(Command(['xacro ', robot_urdf_xacro]), value_type=str)
+robot_description = ParameterValue(Command(['xacro ', xacro_file]), value_type=str)
 
-## or load it directly without creating a ros-param:
+## Creating a parameter is optional. You can instead do:
+# robot_description = Command(['xacro ', xacro_file])
+## to store the result, and then use directly `robot_description`, 
+## which will be automatically substitured as string when used.
+
+## or load it directly without creating a ros-param
+## Downside: you cannot pass arguments with LaunchConfiguration
 # import xacro
-# robot_description = xacro.process_file(robot_urdf_xacro).toxml()
+# robot_description = xacro.process_file(xacro_file).toxml()
+
 
 # example use case
 robot_state_publisher_node = Node(
@@ -74,6 +82,15 @@ return LaunchDescription([
         robot_state_publisher_node,
         # ...
     ])   
+```
+
+We can also pass arguments to the robot_description:
+```python
+
+my_arg1 = LaunchConfiguration('ros2_control')
+my_arg2 = LaunchConfiguration('use_sim_time')
+
+robot_description = Command(['xacro ', xacro_file, ' ros2_control:=', my_arg1, ' use_sim_time:=', my_arg2])
 ```
 
 ---
@@ -127,7 +144,9 @@ return LaunchDescription([
 ## Pass arguments/parameters to node
 
 ```python
-# ros2 run gazebo_ros spawn_entity -topic robot_description -entity my_bot
+
+extra_params_file = os.path.join(get_package_share_directory('package_name'),'config','my_params.yaml')
+
 spawn_entity = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
@@ -136,8 +155,25 @@ spawn_entity = Node(
         parameters=[{
             'param1': 'value1',
             'param2': 'value2'
-        }]
+        },
+        extra_params_file]
     )
+```
+
+where `my_params.yaml` can look something like:
+```yaml
+spawn_entity:
+    ros__parameters:
+        some_int: 42
+        a_string: "Hello world"
+        some_lists:
+            some_integers: [1, 2, 3, 4]
+            some_doubles : [3.14, 2.718]
+```
+
+Command-line equivalent:
+```bash
+ros2 run gazebo_ros spawn_entity -topic robot_description -entity my_bot --ros-args -p param1:=value1 -p param2:=value2 --params-file $(ros2 pkg prefix --share package_name)/config/my_params.yaml
 ```
 
 ---
@@ -145,7 +181,7 @@ spawn_entity = Node(
 ## `rviz`
 
 ```python
-default_rviz_config_path = str(get_package_share_path('package_name') / 'rviz/urdf.rviz')
+default_rviz_config_path = os.path.join(get_package_share_path('package_name'),'rviz/urdf.rviz')
 rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path, description='Absolute path to rviz config file')
 
 rviz_node = Node(
@@ -255,14 +291,14 @@ spawn_entity = Node(
     # condition=IfCondition(LaunchConfiguration('use_sim_time'))
   )
 
-gazebo_action = GroupAction(
+gazebo_nodes = GroupAction(
         actions=[gazebo, spawn_entity],
         condition=IfCondition(LaunchConfiguration('use_sim_time'))
     )
 
 return LaunchDescription([
     # ... ,
-    gazebo_action
+    gazebo_nodes
   ])  
 
 ```
@@ -282,6 +318,126 @@ return LaunchDescription([
         other_launch_file,
         #...
     ])
+```
+
+
+---
+
+## Launch-prefix
+```python
+launch_ros.actions.Node(
+    package='teleop_twist_keyboard',
+    node_executable="teleop_twist_keyboard",
+    output='screen',
+    prefix = 'xterm -fa monaco -fs 15 -e',
+    node_name='teleop')
+```
+
+`xml` equivalent:
+```xml
+<node pkg="teleop_twist_keyboard" exec="teleop_twist_keyboard" name="teleop" output="screen" launch-prefix="xterm -fa monaco -fs 15 -e" />
+```
+
+--- 
+
+## `gdb`
+Add the launch prefix:
+```xml
+xterm -fa monaco -fs 13 -e gdb -args
+```
+
+---
+
+## Execute process - Python expression
+
+```python
+
+turtlesim_ns = LaunchConfiguration('turtlesim_ns')
+use_provided_red = LaunchConfiguration('use_provided_red')
+new_background_r = LaunchConfiguration('new_background_r')
+
+turtlesim_ns_launch_arg = DeclareLaunchArgument(
+    'turtlesim_ns',
+    default_value='turtlesim1'
+)
+
+use_provided_red_launch_arg = DeclareLaunchArgument(
+    'use_provided_red',
+    default_value='False'
+)
+new_background_r_launch_arg = DeclareLaunchArgument(
+    'new_background_r',
+    default_value='200'
+)
+
+spawn_turtle = ExecuteProcess(
+    cmd=[[
+        'ros2 service call ',
+        turtlesim_ns,
+        '/spawn ',
+        'turtlesim/srv/Spawn ',
+        '"{x: 2, y: 2, theta: 0.2}"'
+    ]],
+    shell=True
+)
+
+change_background_r_conditioned = ExecuteProcess(
+    condition=IfCondition( # condition is optional
+        PythonExpression([
+            new_background_r,
+            ' == 200',
+            ' and ',
+            use_provided_red
+        ])
+    ),
+    cmd=[[ # the cmd to execute
+        'ros2 param set ',
+        turtlesim_ns,
+        '/sim background_r ',
+        new_background_r
+    ]],
+    shell=True
+)
+```
+
+Usage:
+```bash
+ros2 launch <package_name> <launch_filename>.py use_provided_red:='True' new_background_r:=200
+```
+Notice we set `use_provided_red:='True'`, as this will be evaluated inside a python expression.
+
+---
+
+## Timer - delay
+```python
+node1 = Node(
+    package='package_name',
+    executable='executable_name',
+)
+
+delayed_node1 = TimerAction(
+            period=2.0,
+            actions=[node1],
+        )
+
+node2 = Node(
+    package='package_name',
+    executable='executable_name',
+)
+
+delayed_node2 = RegisterEventHandler(
+    event_handler=OnProcessStart(
+        target_action=node1,
+        on_start=[node2],
+    )
+)
+
+return LaunchDescription([
+        delayed_node1,
+        delayed_node2,
+        # ...
+    ])
+
 ```
 
 ---

@@ -100,6 +100,7 @@ Arithmetic operations: `"${1.2*wheel_offset - wheel_length/5}"`.
 
 ```xml
 <xacro:include filename="my_other.xacro" />
+<xacro:include filename="$(find <package_name>)/urdf/my_file.xacro" />
 ```
 
 ---
@@ -248,5 +249,31 @@ Otherwise, use `type=continuous`.
 
 ---
 
+## Misc
+
+- Defined arguments/properties are visible in the included xacro files, i.e.:
+    ```xml
+    <?xml version="1.0"?>
+    <robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="robot">
+        <!-- ... -->
+        <xacro:arg name="sim_mode" default="false"/>
+        <!-- ... -->
+        <xacro:include filename="my_included.xacro" />
+        <!-- ... -->
+    </robot>
+    ```
+    and in `my_included.xacro`:
+    ```xml
+    <?xml version="1.0"?>
+    <robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="robot">
+
+        <xacro:if value="$(arg sim_mode)">
+            <!-- do stuff -->
+        </xacro:if>
+        
+    </robot>
+    ```
+
+---
 
 
