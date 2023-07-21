@@ -32,27 +32,30 @@ ros2 launch gazebo_ros gazebo.launch.py world:=$(ros2 pkg prefix --share my_pack
 ```
 Or from launch file:
 ```python
-world_arg = DeclareLaunchArgument(name='world',
-    default_value = os.path.join(get_package_share_path('my_package'), 'worlds/my_world.world'),
-    description='Full path to the world model file to load')
-
+world = os.path.join(get_package_share_path(package_name), 'worlds/my_world.world')
+gz_params_file = os.path.join(get_package_share_path(package_name), 'config/gazebo_params.yaml')
 gazebo = IncludeLaunchDescription(
     PythonLaunchDescriptionSource([
         os.path.join(get_package_share_directory('gazebo_ros'),'launch','gazebo.launch.py'
     )]),
     launch_arguments={
-        'world': LaunchConfiguration('world'),
-        'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file}.items()
+        'world': world,
+        'params_file': gz_params_file,
+        # 'extra_gazebo_args': '--ros-args --params-file ' + gazebo_params_file
+    }.items()
 )
 ```
 - The `world` argument is optional. If ommited, an empty world will be loaded.
-- The yaml `gazebo_params_file` can look like this:
-```yaml
-gazebo:
-  ros__parameters:
-    publish_rate: 400.0 # Hz, the rate at which gazebo publishes joints, sensor msgs etc.
-```
-
+- The yaml `gazebo_params.yaml` can look like this:
+    ```yaml
+    gazebo:
+    ros__parameters:
+        publish_rate: 400.0 # Hz, the rate at which gazebo publishes joints, sensor msgs etc.
+    ```
+- `gazebo.launch.py` launches two other launch files:
+    - `gzclient.launch.py`
+    - `gzserver.launch.py`\
+    Run `ros2 launch gazebo_ros gzserver.launch.py --show-args` to see the full list of arguments you can pass to gazebo.
 ---
 
 ## Spawn urdf model
@@ -205,7 +208,8 @@ For **`image sensor`**:
                 <stddev>0.007</stddev>
             </noise> -->
         </camera>
-        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <!-- creates the node: /my_camera_controller -->
+        <plugin name="my_camera_controller" filename="libgazebo_ros_camera.so">
             <frame_name>camera_link_optical</frame_name>
         </plugin>
     </sensor>
@@ -236,7 +240,8 @@ For **`depth sensor`**:
                 <far>8.0</far>
             </clip>
         </camera>
-        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <!-- creates the node: /my_camera_controller -->
+        <plugin name="my_camera_controller" filename="libgazebo_ros_camera.so">
             <frame_name>camera_link_optical</frame_name>
             <min_depth>0.1</min_depth>
             <max_depth>100.0</max_depth>
@@ -276,7 +281,8 @@ For **`depth sensor`**:
                 <max>12</max>
             </range>
         </ray>
-        <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+        <!-- creates the node: /my_laser_controller -->
+        <plugin name="my_laser_controller" filename="libgazebo_ros_ray_sensor.so">
             <ros>
                 <argument>~/out:=my_scan_topic</argument> <!-- msgs will be published to '/my_scan_topic' -->
             </ros>

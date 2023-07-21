@@ -38,16 +38,18 @@ return LaunchDescription([
     ])                                 
 ```
 
-View arguments of a launch file with `--show-args`:
-```bash
-ros2 launch launch_tutorial example_substitutions.launch.py --show-args
-```
+- View arguments of a launch file with `--show-args`:
+    ```bash
+    ros2 launch launch_tutorial example_substitutions.launch.py --show-args
+    ```
+
+- You can also pass directly values for arguments that are declared in included launch files.
 
 ---
 
 ## Package relative path
 ```python
-my_pkg_path = get_package_share_path('my_package')
+my_pkg_path = get_package_share_path(package_name)
 config_file = os.path.join(my_pkg_path, 'config/params.yaml')
 ```
 
@@ -56,7 +58,7 @@ config_file = os.path.join(my_pkg_path, 'config/params.yaml')
 ## Load robot description
 
 ```python
-xacro_file = os.path.join(get_package_share_path('my_package'), 'urdf/robot_urdf.xacro')
+xacro_file = os.path.join(get_package_share_path(package_name), 'urdf/robot_urdf.xacro')
 
 robot_description = ParameterValue(Command(['xacro ', xacro_file]), value_type=str)
 
