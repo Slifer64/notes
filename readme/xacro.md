@@ -1,4 +1,16 @@
-# xacro
+# Contents
+- [define macro](#define-macro)
+    - [`intertia` macros](#useful-inertia-macros)
+- [arguments](#arguments)
+- [properties](#properties)
+- [include other xacro](#inlucde-other-xacro)
+- [`if/else`](#if--else)
+- [material](#material)
+- [link](#link)
+    - [simple geometries](#simple-geometries)
+    - [mesh files](#mesh-files)
+- [joint](#joint)
+- [misc](#misc)
 
 ## Define macro
 
@@ -36,7 +48,7 @@ Usage:
 ```
 
 
-Useful **inertia** macros:
+### Useful **inertia** macros:
 ```xml
 <!-- cylinder -->
 <xacro:macro name="cylinder_inertial" params="mass radius length *origin">
@@ -149,7 +161,7 @@ Usage: `<material name="orange"/>`
 
 ## link
 
-- **simple geometries**
+- ### simple geometries
 
 ```xml
 <link name="chassis">
@@ -186,7 +198,7 @@ Usage: `<material name="orange"/>`
 </link>
 ```
 
-- **`mesh` files**
+- ### `mesh` files
 
 ```xml
 <property name="mesh_path" value = "package://my_package/meshes" />
