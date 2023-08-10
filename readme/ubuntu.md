@@ -2,18 +2,41 @@
 
 ## Update version from 11 to 12 (Ununtu 22.04)
 
-```bash
-# download packages
-sudo apt-get install -y gcc-11 gcc-12
-sudo apt-get install -y g++-11 g++-12
+### Download some gcc/g++ versions.
 
+- Use either pre-built
+  ```bash
+  sudo apt-get install -y gcc-11 gcc-12
+  sudo apt-get install -y g++-11 g++-12
+  ```
+
+- Or you can even install manually. E.g. to install `11.3.0` at  `/usr/local/gcc-11.3.0`:
+  ```bash
+
+    sudo apt install build-essential
+    sudo apt install libmpfr-dev libgmp3-dev libmpc-dev tar -y
+    wget http://ftp.gnu.org/gnu/gcc/gcc-11.3.0/gcc-11.3.0.tar.gz
+    tar -xf gcc-11.3.0.tar.gz
+    cd gcc-11.3.0/
+    ./configure -v --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu \
+    --prefix=/usr/local/gcc-11.3.0 --enable-checking=release --enable-languages=c,c++ \
+    --disable-multilib --program-suffix=-11.3.0
+    make -j3
+    sudo make install
+    ```
+    Notice that this **will install both `gcc` and `g++`!** (as g++ has become part of the gcc package).
+
+### Set up alternatives:
+```bash
 # remove previous alternatives
 sudo update-alternatives --remove-all gcc 
 sudo update-alternatives --remove-all g++
 
-# setup alternatives
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 10
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 20
+# setup/register alternatives
+# sudo update-alternatives --install /usr/bin/gcc gcc <path-of-specific-gcc-executable> <priority>  
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 140
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 120
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/local/gcc-11.3.0/bin/gcc-11.3.0 130
 sudo update-alternatives --set cc /usr/bin/gcc
 
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 10
@@ -23,6 +46,10 @@ sudo update-alternatives --set c++ /usr/bin/g++
 # select default versions:
 sudo update-alternatives --config gcc
 sudo update-alternatives --config g++
+
+# check version
+gcc --version
+g++ --version
 ```
 
 ---

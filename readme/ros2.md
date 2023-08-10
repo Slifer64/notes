@@ -17,7 +17,7 @@
 - [create package](#create-package)
 	- [c++](#c)
 		- [create](#create)
-		- [add executables](#add-executables)
+		- [add executables/libraries](#add-executables--libraries)
 		- [install](#install)
 		- [build \& source](#build--source)
 	- [python](#python)
@@ -42,7 +42,7 @@
 # Basic
 
 ```bash
-colcon build --symlink-install
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 
 ros2 run examples_rclcpp_minimal_subscriber subscriber_member_function
@@ -301,11 +301,17 @@ Can also use:
      src/
   ```
 
-- ### Add executables 
+- ### Add executables / libraries
   In the `CMakeLists.txt`
   ```cmake
+  # executable
   add_executable(<exec_name> <src_file>.cpp)
   ament_target_dependencies(<exec_name> rclcpp <other pkg dependencies>)
+
+  # library
+  add_library(<lib_name> <src_files>.cpp)
+  # export the library
+  ament_export_targets(<lib_name> HAS_LIBRARY_TARGET)
   ```
 
 - ### Install
@@ -316,6 +322,21 @@ Can also use:
     <executable_2>
     ...
     DESTINATION lib/${PROJECT_NAME}
+  )
+
+  # library
+  install(
+    DIRECTORY include/<lib_header_folder>
+    DESTINATION include
+  )
+  
+  install(
+    TARGETS <lib_name>
+    EXPORT <lib_name>
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
   )
 
   # launch, config, rviz files etc.
