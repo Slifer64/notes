@@ -16,7 +16,9 @@
 - [exec process - python expr](#execute-process---python-expression)
 - [timer - delay](#timer---delay)
 - [misc](#misc)
-
+    - [launch config vs declare arg](#launchconfiguration-vs-declarelaunchargument)
+    - [alternative way to write launch file](#alternative-way-to-write-launch-file)
+    - [get ros param from another node](#get-ros-param-from-another-node)
 ---
 
 ## Usesful includes
@@ -506,5 +508,11 @@ launch_descr.add_action(...)
 return launch_descr
 ```
 
+### Get ros param from another node
+
+Get the parameter `robot_description` from the node `/robot_state_publisher`:
+```python
+robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
+```
 
 ---
