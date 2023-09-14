@@ -37,6 +37,7 @@
 - [misc](#misc)
 	- [find package path](#find-package-path)
 	- [launch with rel package path](#launch-with-rel-package-path)
+  - [Migration guide from ROS 1](#migration-guide-from-ros-1)
 
 
 # Basic
@@ -304,14 +305,27 @@ Can also use:
 - ### Add executables / libraries
   In the `CMakeLists.txt`
   ```cmake
+
+  include_directories(
+    include
+    # other includes...
+  )
+
   # executable
   add_executable(<exec_name> <src_file>.cpp)
+  target_include_directories(<exec_name> PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  target_compile_features(<exec_name> PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
   ament_target_dependencies(<exec_name> rclcpp <other pkg dependencies>)
 
   # library
   add_library(<lib_name> <src_files>.cpp)
-  # export the library
-  ament_export_targets(<lib_name> HAS_LIBRARY_TARGET)
+  target_compile_features(<lib_name> PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+  target_include_directories(<lib_name> PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+  ament_target_dependencies(<lib_name> rclcpp <other pkg dependencies>)
   ```
 
 - ### Install
@@ -326,17 +340,28 @@ Can also use:
 
   # library
   install(
-    DIRECTORY include/<lib_header_folder>
+    # DIRECTORY include/<lib_header_folder>
+    DIRECTORY include/
     DESTINATION include
   )
   
   install(
     TARGETS <lib_name>
-    EXPORT <lib_name>
+    # EXPORT <lib_name>
+    EXPORT export_${PROJECT_NAME}
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
+    # INCLUDES DESTINATION include
+  )
+  ament_export_include_directories(
+    include
+  )
+  ament_export_libraries(
+    <lib_name>
+  )
+  ament_export_targets(
+    export_${PROJECT_NAME}
   )
 
   # launch, config, rviz files etc.
@@ -348,6 +373,9 @@ Can also use:
     worlds
     DESTINATION share/${PROJECT_NAME}
   )
+
+  # add this to make the library available as a ros package
+  ament_package()
   ```
 
 - ### Build \& source
@@ -560,3 +588,7 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix --share turtle_tf2_py)/rviz/turtle_rvi
 ```bash
 ros2 launch urdf_tutorial display.launch.py model:=`ros2 pkg prefix --share urdf_tutorial`/urdf/01-myfirst.urdf
 ```
+
+## Migration guide from ROS 1
+
+https://docs.ros.org/en/iron/The-ROS2-Project/Contributing/Migration-Guide.html

@@ -59,9 +59,11 @@ return LaunchDescription([
     ])                                 
 ```
 
-- View arguments of a launch file with `--show-args`:
+- View arguments of a launch file with `--show-args` (or the shorthand `-s`):
     ```bash
     ros2 launch launch_tutorial example_substitutions.launch.py --show-args
+    # or
+    ros2 launch launch_tutorial example_substitutions.launch.py -s
     ```
 
 - You can also pass directly values for arguments that are declared in included launch files.
@@ -190,8 +192,8 @@ spawn_entity:
         some_int: 42
         a_string: "Hello world"
         some_lists:
-            some_integers: [1, 2, 3, 4]
-            some_doubles : [3.14, 2.718]
+            some_integers: [1, 2, 3, 4] # access via 'some_list.some_integers'
+            some_doubles : [3.14, 2.71] # access via 'some_list.some_doubles'
 ```
 
 Command-line equivalent:
