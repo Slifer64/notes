@@ -15,16 +15,17 @@
 - [ros2 bag](#ros2-bag)
 - [colcon build](#colcon-build)
 - [create package](#create-package)
-	- [c++](#c)
-		- [create](#create)
-		- [add executables/libraries](#add-executables--libraries)
-		- [install](#install)
-		- [build \& source](#build--source)
-	- [python](#python)
-		- [create](#create-1)
-		- [add executables](#add-executables-1)
-		- [add launch, config files etc.](#add-launch-config-files-etc)
-		- [build \& source](#build--source-1)
+	- [c++](#cpp_pkg)
+		- [create](#cpp_pkg_create)
+		- [add executables/libraries](#cpp_pkg_add_exec_lib)
+		- [install](#cpp_pkg_install)
+		- [build \& source](#cpp_pkg_build_source)
+	- [python](#py_pkg)
+		- [create](#py_pkg_create)
+		- [add executables](#py_pkg_add_exec)
+		- [add launch, config files etc.](#py_pkg_add_launch_config)
+		- [build \& source](#py_pkg_build_source)
+  - [c++ \& python](#c--python-in-the-same-package)
 - [install workspace package dependencies](#install-workspace-package-dependencies)
 - [Interfaces](#interfaces)
 	- [message](#message-examples)
@@ -283,9 +284,10 @@ Can also use:
 
 # create package
 
-## c++
+<h2 id="cpp_pkg">c++</h2>
 
-- ### Create
+- <h3 id="cpp_pkg_create">Create</h3>
+
   ```bash
   # --node-name: creates a simple hello world executable
   ros2 pkg create --build-type ament_cmake --node-name hello_world_node <packge_name> --dependencies rclcpp <other packages> --license Apache-2.0
@@ -302,7 +304,8 @@ Can also use:
      src/
   ```
 
-- ### Add executables / libraries
+- <h3 id="cpp_pkg_add_exec_lib">Add executables / libraries</h3>
+
   In the `CMakeLists.txt`
   ```cmake
 
@@ -328,7 +331,8 @@ Can also use:
   ament_target_dependencies(<lib_name> rclcpp <other pkg dependencies>)
   ```
 
-- ### Install
+- <h3 id="cpp_pkg_install">Install</h3>
+
   ```cmake
   # executables
   install(TARGETS
@@ -378,16 +382,18 @@ Can also use:
   ament_package()
   ```
 
-- ### Build \& source
+- <h3 id="cpp_pkg_build_source">Build & source</h3>
+
   ```bash
   colcon build --packages-select <package_name>
   source ./install/setup.bash
   ```
 
 
-## python
+<h2 id="py_pkg">python</h2>
 
-- ### Create
+- <h3 id="py_pkg_create">Create</h3>
+
   ```bash
   ros2 pkg create --build-type ament_python --node-name hello_world_node <packge_name> --dependencies rclcpp <other packages> --license Apache-2.0
   ```
@@ -410,7 +416,8 @@ Can also use:
   install_scripts=$base/lib/<package_name>
   ```
 
-- ### Add executables 
+- <h3 id="py_pkg_add_exec">Add executables</h3>
+
   In the `setup.py`:
   ```python
   package_name = <package_name>
@@ -426,7 +433,8 @@ Can also use:
   )
   ```
 
-- ### Add launch, config files etc.
+- <h3 id="py_pkg_add_launch_config">Add launch, config files etc.</h3>
+
   ```python
   package_name = <package_name>
 
@@ -447,11 +455,162 @@ Can also use:
   )
   ```
 
-- ### Build \& source
+- <h3 id="py_pkg_build_source">Build & source</h3>
+
   ```bash
   colcon build --symlink-install --packages-select <package_name>
   source ./install/setup.bash
   ```
+
+<h2 id="cpp_py_pkg">c++ & python</h2>
+
+- <h3 id="cpp_py_pkg_create">create c++ package</h3>
+
+  See [create c++ package](#cpp_pkg_create).
+  The package structure should look like this:
+  ```
+  my_cpp_py_pkg/
+  ├── CMakeLists.txt
+  ├── include
+  │   └── my_cpp_py_pkg
+  ├── package.xml
+  └── src
+  ```
+
+- <h3 id="cpp_py_pkg_add_py">Add python folders & scripts</h3>
+
+  Add the following for python:
+  ```diff
+   my_cpp_py_pkg/
+   ├── CMakeLists.txt
+   ├── include
+   │   └── my_cpp_py_pkg
+  +├── my_cpp_py_pkg/    # utility classes/functions etc.
+  +|   ├── __init__.py
+  +|   ├── my_module1.py
+  +|   └── my_module2.py
+   ├── package.xml
+   ├── src
+  +└── scripts/          # executable scripts/nodes
+  +|   ├── my_exec_node1.py
+  +|   └── my_exec_node2.py
+  ```
+  where
+  - `my_module*.py` are optional modules (classes, utility functions etc)
+  - `my_node*.py` are the ''executable'' nodes/scripts (i.e. contain, among other stuff, a `main` function).
+
+  <mark>Important</mark>: Add `#!/usr/bin/env python3` at the top of all `*.py` executable scripts/nodes. This allows us to use these executables/scripts using `ros2 run` or in launch files.
+
+  The python utility modules can be accessed by the executables scripts in `scripts/` or any other package that includes `my_cpp_py_pkg`, e.g.:
+  ```python
+  #!/usr/bin/env python3
+
+  from my_cpp_py_pkg.my_module1.py import MyClass
+  from my_cpp_py_pkg.my_module2.py import MyClass2, my_fun
+  # ...
+  def main():
+    # ...
+
+  if __name__ == '__main__':
+    main()
+  ```
+
+- <h3 id="cpp_py_pkg_package_xml">Edit <code>package.xml</code></h3>
+
+  ```diff
+  <?xml version="1.0"?>
+  <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+  <package format="3">
+    <name>my_cpp_py_pkg</name>
+    <version>0.0.0</version>
+    <description>TODO: Package description</description>
+    <maintainer email="your@email.com">Name</maintainer>
+    <license>TODO: License declaration</license>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+  + <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+    <!-- cpp dependencies -->
+    <depend>rclcpp</depend>
+    <!-- <depend>...</depend> -->
+
+  + <!-- python dependencies -->
+  + <exec_depend>rclpy</exec_depend>
+  + <!-- <exec_depend>...</exec_depend> -->
+
+    <test_depend>ament_lint_auto</test_depend>
+    <test_depend>ament_lint_common</test_depend>
+
+    <export>
+      <build_type>ament_cmake</build_type>
+    </export>
+  </package>
+  ```
+  Notice that instead of `ament_python`, we use `ament_cmake_python` to setup our python stuff with cmake from the `CMakeLists.txt` file.
+
+- <h3 id="cpp_py_pkg_cmakelists">Edit <code>CMakeLists.txt</code></h3>
+
+  Add the following to `CMakeLists.txt`:
+  ```cmake
+  # Install Python modules
+  ament_python_install_package(${PROJECT_NAME})
+
+  # Install Python executables
+
+  # make python programs executable (required when building with --symlink-install)
+  execute_process(
+      COMMAND bash -c "chmod +x \
+      ${CMAKE_CURRENT_SOURCE_DIR}/scripts/my_exec_node1.py \
+      ${CMAKE_CURRENT_SOURCE_DIR}/scripts/my_exec_node2.py"
+      RESULT_VARIABLE err_code
+  )
+  if(${err_code})
+      message(FATAL_ERROR "Error making scripts executable...")
+  endif()
+
+  install(PROGRAMS
+    scripts/my_exec_node1.py
+    scripts/my_exec_node2.py
+    DESTINATION lib/${PROJECT_NAME}
+  )
+  ```
+  Notice that when using `--symlink-install`, the installed script, is a symbolik link to `scripts/my_exec_node*.py`, that's why we have to make the latter executable. 
+
+  We can now run our python scripts/executables like:
+  ```bash
+  ros2 run my_cpp_py_pkg my_exec_node1.py
+  ```
+  or from a launch file:
+  ```python
+  my_node = Node(
+    package='my_cpp_py_pkg',
+    executable='my_exec_node1.py',
+    name='my_exec_node1',
+  )
+  ```
+  Notice that the executables have the suffix `.py`. If we want to run them directly without the `.py` suffix, we can rename them during the install step in the `CMakeLists.txt`:
+
+  ```diff
+  - install(PROGRAMS
+  -   scripts/my_exec_node1.py
+  -   scripts/my_exec_node2.py
+  -   DESTINATION lib/${PROJECT_NAME}
+  - )
+  + install(PROGRAMS
+  +   scripts/my_exec_node1.py
+  +   DESTINATION lib/${PROJECT_NAME}
+  +   RENAME my_exec_node1
+  + )
+  + install(PROGRAMS
+  +   scripts/my_exec_node2.py
+  +   DESTINATION lib/${PROJECT_NAME}
+  +   RENAME my_exec_node2
+  + )
+  ```
+  In this case however, the `--symlink-install` will not work, so if we change the scripts, we will have to `colcon build` again.
+
+  <mark>Best solution</mark>: Remove the `.py` suffix from all executables in `scripts/`. Since `#!/usr/bin/env python3` is set at the top, they are already registered as python code. So in all cases above (`CMakeLists.txt` and during `ros2 run/launch`) we have <code>my_exec_node*~~.py~~<code>.
+
 
 ---
 
