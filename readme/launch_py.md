@@ -28,7 +28,7 @@ import os
 from ament_index_python.packages import get_package_share_path, get_package_share_directory
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.conditions import IfCondition, UnlessCondition 
+from launch.conditions import IfCondition, UnlessCondition, LaunchConfigurationEquals, LaunchConfigurationNotEquals
 from launch_ros.parameter_descriptions import ParameterValue 
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction, GroupAction, RegisterEventHandler, IncludeLaunchDescription, TimerAction
 from launch.event_handlers import OnProcessStart
@@ -228,7 +228,7 @@ return LaunchDescription([
 
 ## Conditions
 
-- ### `IfCondition` - `UnlessCondition`
+- ### `IfCondition` - `UnlessCondition` - `LaunchConfigurationEquals`
 
 ```python
 gui_arg = DeclareLaunchArgument(name='gui', default_value='true', 
@@ -251,6 +251,14 @@ joint_state_publisher_gui_node = Node(
     executable='joint_state_publisher_gui',
     condition=IfCondition(LaunchConfiguration('gui'))
 )
+
+rs_camera_node = Node(
+    package='rs_camera',
+    executable='rs_camera',
+    condition=LaunchConfigurationEquals('camera', 'rs_camera')
+)
+# Similarly for
+# LaunchConfigurationNotEquals('camera', 'kinect_camera'))
 
 gazebo = IncludeLaunchDescription(
     PythonLaunchDescriptionSource([os.path.join(

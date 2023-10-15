@@ -1,3 +1,9 @@
+# YAML in command line
+
+Used for instance to pushish messages, services etc.
+
+See http://wiki.ros.org/ROS/YAMLCommandLine
+
 ## Realsense camera
 
 ### Filters
