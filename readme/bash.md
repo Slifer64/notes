@@ -3,7 +3,8 @@
 # Print colored text
 
 ## Color codes
-<div class="table-wrapper-paragraph"><table>
+<div class="table-wrapper-paragraph">
+<table>
 <thead>
     <tr><th>Color</th><th>Foreground Code</th><th>Background Code</th></tr>
 </thead>
@@ -25,7 +26,8 @@
     <tr>    <td>Light Cyan</td>     <td>96</td> <td>106</td> </tr>
     <tr>    <td>White</td>          <td>97</td> <td>107</td> </tr>
 </tbody>
-</table></div>
+</table>
+</div>
 
 ## Text formats
 <div class="table-wrapper-paragraph"><table>

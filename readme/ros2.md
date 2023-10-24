@@ -25,7 +25,7 @@
 		- [add executables](#py_pkg_add_exec)
 		- [add launch, config files etc.](#py_pkg_add_launch_config)
 		- [build \& source](#py_pkg_build_source)
-  - [c++ \& python](#c--python-in-the-same-package)
+  - [c++ \& python](#cpp_py_pkg)
 - [install workspace package dependencies](#install-workspace-package-dependencies)
 - [Interfaces](#interfaces)
 	- [message](#message-examples)
