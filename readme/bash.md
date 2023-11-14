@@ -1,4 +1,13 @@
 # Contents
+- [Kill process by name](#kill-process-by-name)
+- [Print colored text](#print-colored-text)
+- [Show git branch and status](#show-git-branch-and-status)
+
+# Kill process by name
+```bash
+ps -aux | grep 'ros2 launch my_controller.launch.py' | awk {'print $2;'} | xargs kill -INT
+```
+This will sent a `ctrl+C` (`SIGINT`) signal to the process `ros2 launch my_controller.launch.py`.
 
 # Print colored text
 
@@ -60,7 +69,11 @@ Add the following to `~/.bashrc`:
 ```bash
 git_branch_and_status() {
 
-	if [ -d .git ]; then
+	if [ -d .git ] || [ -f .git ] || git rev-parse --is-inside-work-tree >/dev/null 2>&1; 
+	then
+
+		repo_name=$(git config --get remote.origin.url | sed 's/.*\/\([^\/]*\)\.git$/\1/')
+		if [ -f .git ]; then repo_name="module:$repo_name"; fi
 
 		GIT_BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
 		GIT_STATUS=$(git status 2> /dev/null)
@@ -71,33 +84,33 @@ git_branch_and_status() {
 		color="\e[0m" # RESET
 
 		if echo "$GIT_STATUS" | grep -q "Untracked files"; then
-		  untracked="-"
-		  color="\e[1;33m" # YELLOW
+			untracked="-"
+			color="\e[1;33m" # YELLOW
 		fi
 		if echo "$GIT_STATUS" | grep -q "Changes not staged for commit"; then
-		  not_staged="*"
-		  color="\e[1;31m" # RED
+			not_staged="*"
+			color="\e[1;31m" # RED
 		fi
 		if echo "$GIT_STATUS" | grep -q "Changes to be committed"; then
-		  staged="+"
-		  color="\e[1;32m" # GREEN
+			staged="+"
+			color="\e[1;32m" # GREEN
 		else
-		  staged=""
+			staged=""
 		fi
 		
 		if echo "$GIT_STATUS" | grep -q "working directory clean"; then
-		  color="\e[0m" # RESET
+			color="\e[0m" # RESET
 		elif echo "$GIT_STATUS" | grep -q "Your branch is ahead of"; then
-		  color="\e[1;34m" # BLUE
+			color="\e[1;34m" # BLUE
 		elif echo "$GIT_STATUS" | grep -q "Your branch is behind"; then
-		  color="\e[1;36m" # CYAN
+			color="\e[1;36m" # CYAN
 		elif echo "$GIT_STATUS" | grep -q "HEAD detached"; then
-		  color="\e[1;35m" # PURPPLE
+			color="\e[1;35m" # PURPPLE
 		fi
 		
 		if [ -n "$GIT_BRANCH" ]; then
 			# echo -e "\[$color\]("$GIT_BRANCH"$untracked$not_staged$staged)"
-			echo -e "$color"
+			echo -e " \e[1;2;37m($repo_name)\e[0m$color"
 			echo "("$GIT_BRANCH"$untracked$not_staged$staged)"
 		fi
 	

@@ -136,7 +136,7 @@ Arithmetic operations: `"${1.2*wheel_offset - wheel_length/5}"`.
 <xacro:arg name="gripper" default="" />
 <xacro:property name="gripper" value="$(arg gripper)" />
 
-<xacro:unless value="$(gripper == '')">
+<xacro:unless value="${gripper == ''}">
     <xacro:if value="${gripper == 'rg2_ft'}">
         <!-- ... -->
     </xacro:if>
