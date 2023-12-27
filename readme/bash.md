@@ -1,13 +1,238 @@
 # Contents
-- [Kill process by name](#kill-process-by-name)
+- [Bash script](#bash-script)
+- [Find/Kill process by name](#findkill-a-process-by-name)
 - [Print colored text](#print-colored-text)
 - [Show git branch and status](#show-git-branch-and-status)
 
-# Kill process by name
+
+# Bash script
+
+## Arithmentic operator
+
+### Integer operations
 ```bash
-ps -aux | grep 'ros2 launch my_controller.launch.py' | awk {'print $2;'} | xargs kill -INT
+x=10; y=20
+echo $(( $x + $y ))  # addition
+echo $(( $x - $y ))  # subtraction
+echo $(( $x * $y ))  # multiplication 
+echo $(( $x / $y ))  # division
+echo $(( $x ** $y ))  # exponentiation
+echo $(( $x % $y ))  # modulo
+# directly assign the result to `$x`
+(( x += 10 ))    # increament
+(( x -= 15 ))  # decreament
+(( x *= 2 ))  # multiply
+(( x /= 5 ))  # divide
+(( x %= 5 ))  # modulo
 ```
-This will sent a `ctrl+C` (`SIGINT`) signal to the process `ros2 launch my_controller.launch.py`.
+
+### Floating operations
+Use `$(echo "<operations>" | bc)`
+```bash
+a=5.2; b=7.3
+result=$(echo "$a * (($b - 1.3)/2)" | bc)
+echo "15.6 == "$result
+```
+
+
+## `if-else`
+
+https://linuxize.com/post/bash-if-else-statement/
+
+```bash
+val=5
+if [[ $val -eq 1 ]]; then
+  echo "val = 1"
+elif [[ "$val" -gt 3 ]] && [[ $val -ne 4 ]]; then
+  echo "val = 5"
+else
+  exit 1
+fi
+```
+
+### Common operators:
+
+| operator | description |
+|----------|:-------------|
+|-n VAR | True if the length of VAR is greater than zero.
+| -z VAR | True if the VAR is empty. |
+| STRING1 = STRING2 | True if STRING1 and STRING2 are equal. |
+| STRING1 != STRING2 | True if STRING1 and STRING2 are not equal. |
+| INTEGER1 -eq INTEGER2 | True if INTEGER1 and INTEGER2 are equal. |
+| INTEGER1 -ne INTEGER2 | True if INTEGER1 and INTEGER2 are **not** equal. |
+| INTEGER1 -gt INTEGER2 | True if INTEGER1 is greater than INTEGER2. |
+| INTEGER1 -lt INTEGER2 | True if INTEGER1 is less than INTEGER2. |
+| INTEGER1 -ge INTEGER2 | True if INTEGER1 is equal or greater than INTEGER2. |
+| INTEGER1 -le INTEGER2 | True if INTEGER1 is equal or less than INTEGER2. |
+| -h FILE | True if the FILE exists and is a symbolic link. |
+| -r FILE | True if the FILE exists and is readable. |
+| -w FILE | True if the FILE exists and is writable. |
+| -x FILE | True if the FILE exists and is executable. |
+| -d FILE | True if the FILE exists and is a directory. |
+| -e FILE | True if the FILE exists and is a file, regardless of type (node, directory, socket, etc.). |
+| -f FILE | True if the FILE exists and is a regular file (not a directory or device). |
+
+Example:
+```bash
+if [[ -d "my_dir" ]]; then
+	echo "It is a directory"
+fi
+```
+
+## arrays
+```bash
+# declare -a fruits=("Apple" "Banana" "Orange" "Grape" "Melon")
+fruits=("Apple" "Banana" "Orange" "Grape" "Melon")
+
+# array length
+length=${#fruits[@]}
+
+# element access
+echo ${fruits[2]}
+i=4
+echo ${fruits[$i]}
+
+# append elements
+fruits+=("Mango" "Peach")
+
+# convert multiple function return values to an array
+array_result=($(my_fun))
+```
+
+## `for loop`
+https://linuxize.com/post/bash-for-loop/
+
+https://linuxize.com/post/bash-while-loop/
+
+```bash
+for i in {0..3}; do
+  echo -n "$i " # 0 1 2 3
+done
+
+for i in {0..20..5}; do
+  echo -n "$i " # 0 5 10 15 20
+done
+
+for element in Apple Banana Orange; do
+  echo "$element"
+done
+
+for f in "${fruits[@]}"; do
+  echo -n "$f "
+done
+
+for ((i=0; i<${#fruits[@]}; i++)); do
+    echo "${fruits[$i]} --> ${B[$i]}"
+done
+
+for ...; do
+	if [[ ... ]]; then
+		break
+		# continue
+	fi
+done
+```
+
+Extra:
+```bash
+for file in *\ *; do
+  mv "$file" "${file// /_}"
+done
+
+for file in *.jpeg; do
+    mv -- "$file" "${file%.jpeg}.jpg"
+done
+```
+
+## Functions
+
+https://linuxize.com/post/bash-functions/
+
+### Pass arguments and retun single value
+
+```bash
+global_var=2
+
+add_numbers() 
+{
+	local argc=$#
+    local argv=$@
+    local arg1=$1
+    local arg2=$2
+    # local arg3=$3
+
+	(( global_var += $argc ))
+
+	result=$(echo "($arg1 + $arg2)*$global_var" | bc)
+	echo $result
+}
+
+result=$(add_numbers 5.2 7.3)
+exit_code=$?
+
+if [[ ! $exit_code -eq 0 ]]; then
+	echo -e "\033[1;31mExecution failed...\033[0m"
+    return 1
+fi
+
+echo "exit code: "$exit_code
+echo "50.0 == "$result
+```
+
+- The passed parameters are `$1`, `$2`, `$3` … `$n`, corresponding to the position of the parameter after the function’s name.
+- The `$0` variable is reserved for the function’s name.
+- The `$#` variable holds the number of positional parameters/arguments passed to the function.
+- The `$*` and `$@` variables hold all positional parameters/arguments passed to the function.
+	- When double-quoted, `"$*"` expands to a single string separated by space (the first character of IFS) - `"$1 $2 $n"`.
+	- When double-quoted, `"$@"` expands to separate strings - `"$1" "$2" "$n"`.
+	- When not double-quoted, `$*` and `$@` are the same.
+
+### Return multiple values
+```bash
+my_fun()
+{
+	# ...
+	a="Hello"
+	b=6
+	c="yoo"
+	echo "$a $b $c"
+}
+
+rt=($(my_fun $arg1 $arg2 ...))
+a=${rt[0]}
+b=${rt[1]}
+c=${rt[2]}
+```
+
+# Search \& replace folder name/pattern
+
+```bash
+# Search recursively in all folder and subfolders and replace 'outputs' with 'mp_weights'
+find ./ -type f -exec rename 's/outputs/mp_weights/' '{}' \;
+```
+
+# Find/Kill a process by name
+
+## Find
+```bash
+ps -aux | grep 'ros2 launch my_process.launch.py'
+# simpler:
+pgrep -f 'ros2 launch my_process.launch.py'
+```
+
+## Kill
+```bash
+ps -aux | grep 'ros2 launch my_process.launch.py' | awk {'print $2;'} | xargs kill -INT
+pgrep -f 'ros2 launch my_process.launch.py' | xargs kill -INT
+# simpler:
+pkill -SIGINT -f 'ros2 launch my_process.launch.py'
+```
+This will sent a `ctrl+C` (`SIGINT`) signal to the process `ros2 launch my_process.launch.py`.
+
+## Kill all
+```bash
+killall code
+```
 
 # Print colored text
 

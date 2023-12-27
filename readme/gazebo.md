@@ -10,6 +10,7 @@
 - [lidar](#lidar)
 - [teleop](#teleop)
 - [notes](#notes)
+- [common issues](#common-issues)
 ---
 
 ## Install
@@ -354,3 +355,19 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 - `odom` frame tells us where the robot is w.r.t. the initial gazebo pose of the robot.
 - Add damping to the joints to stop them it flopping around. e.g. `<dynamics damping="10.0" friction="10.0"/>`
 - Define `inertia` for `links` attached to **not-fixed** `joints`.
+
+---
+
+## Common issues
+
+- The robot appears loaded but is not visible on Gazebo: \
+  If the robot contains `*.stl` files, add to your `package.xml`:
+  ```xml
+  <export>
+    <gazebo_ros gazebo_model_path="${prefix}/.." />
+  </export>
+  ```
+  In that case, do not specify manually Gazebo color tags for each link.
+
+- The model is loaded, but no joints found: \
+  Make sure you have defined inertia for all required links.

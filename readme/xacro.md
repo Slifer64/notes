@@ -1,8 +1,11 @@
 # Contents
-- [define macro](#define-macro)
+- [macros](#define-macro)
+    - [define macro](#define-macro)
     - [`intertia` macros](#useful-inertia-macros)
+    - [pass `dict` to macro param](#pass-dictionary-param-to-macro)
 - [arguments](#arguments)
 - [properties](#properties)
+- [load params from yaml](#load-params-from-yaml)
 - [include other xacro](#inlucde-other-xacro)
 - [`if/else`](#if--else)
 - [material](#material)
@@ -11,6 +14,8 @@
     - [mesh files](#mesh-files)
 - [joint](#joint)
 - [misc](#misc)
+
+# Macros
 
 ## Define macro
 
@@ -48,7 +53,7 @@ Usage:
 ```
 
 
-### Useful **inertia** macros:
+## Useful **inertia** macros:
 ```xml
 <!-- cylinder -->
 <xacro:macro name="cylinder_inertial" params="mass radius length *origin">
@@ -84,9 +89,38 @@ Usage:
 </xacro:macro>  
 ```
 
+## Pass dictionary param to macro
+Example:
+```xml
+<xacro:macro name="my_robot" params="prefix parent offset:=${dict(x=0.0,y=0.0,z=0.0)}">
+
+<joint name="${parent}_${prefix}base_link_joint" type="fixed">
+    <parent link="${parent}"/>
+    <child link="${prefix}base_link"/>
+    <origin xyz="${offset['x']} ${offset['y']} ${offset['z']}" rpy="0 0 0" />
+</joint>
+
+<link name="${prefix}base_link">
+    <visual>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <geometry>
+        <box size="0.2 0.3 0.4" />
+    </geometry>
+    <material name="Cyan">
+        <color rgba="0.0 1.0 1.0 0.2"/>
+    </material>
+    </visual>
+</link>
+
+</xacro:macro>
+
+<link name="base_link" />
+<xacro:my_robot prefix="robot" parent="base_link" offset="${dict(x=0.5,y=0.1,z=1.6)}" />
+```
+
 ---
 
-## Arguments
+# Arguments
 
 ```xml
 <xacro:arg name="use_sim" default="false"/>
@@ -96,7 +130,7 @@ Usage:
 
 ---
 
-## Properties
+# Properties
 
 ```xml
 <xacro:property name="wheel_radius" value="0.05"/>
@@ -108,7 +142,63 @@ Arithmetic operations: `"${1.2*wheel_offset - wheel_length/5}"`.
 
 ---
 
-## Inlucde other xacro
+# Load params from yaml
+Lets say we have the yaml:
+```yaml
+links:
+    shoulder:
+      radius: 0.06
+      length: 0.15
+    upperarm:
+      radius: 0.06
+      length: 0.425
+
+inertia_parameters:
+  shoulder:
+    CoM: [0.0, 0.0, 0.08]
+    mass: 2.5
+    inertia: [0.15, 0.15, 0.01] # ixx, iyy, izz
+  upper_arm:
+    CoM: [0.0, 0.0, 0.03]
+    mass: 1.6
+    inertia: [0.1, 0.1, 0.01]
+``` 
+We can load it using `${xacro.load(<path_to_yaml_file>)}` and store it to a `xacro:property`, from which we can then read values as in a dictionary, i.e.:
+```xml
+<!-- the path to the *.yaml -->
+<xacro:property name="robot_params_file" value="$(find my_robot)/config/params.yaml"/>
+
+<!-- load yaml and store it as a property -->
+<xacro:property name="robot_params" value="${xacro.load_yaml(robot_params_file)}"/>
+
+<!-- access values as in a dictionary -->
+
+<xacro:property name="link_params" value="${robot_params['links']}"/>
+<xacro:property name="inertia_params" value="${robot_params['inertia_parameters']}"/>
+
+<link name="shoulder">
+    <visual>
+        <geometry>
+            <cylinder radius="${link_params['shoulder']['radius']}" length="${link_params['shoulder']['length']}" />
+        </geometry>
+        <!-- 
+        <material ...
+        <origin ... 
+        -->
+    </visual>
+    <inertial>
+      <origin xyz="${inertia_params['shoulder']['CoM'][0]} ${inertia_params['shoulder']['CoM'][1]} ${inertia_params['shoulder']['CoM'][2]}" rpy="0 0 0" />
+      <mass value="${inertia_params['shoulder']['mass']}" />
+      <inertia 
+        ixx="${inertia_params['shoulder']['inertia'][0]}" ixy="0.0" ixz="0.0"
+        iyy="${inertia_params['shoulder']['inertia'][1]}" iyz="0.0"
+        izz="${inertia_params['shoulder']['inertia'][2]}" 
+        />
+    </inertial>
+</link>
+```
+
+# Inlucde other xacro
 
 ```xml
 <xacro:include filename="my_other.xacro" />
@@ -117,7 +207,7 @@ Arithmetic operations: `"${1.2*wheel_offset - wheel_length/5}"`.
 
 ---
 
-## if / else
+# if / else
 
 ```xml
 <xacro:arg name="use_sim" default="false"/>
@@ -148,7 +238,7 @@ Arithmetic operations: `"${1.2*wheel_offset - wheel_length/5}"`.
 
 ---
 
-## material
+# material
 
 ```xml
 <material name="orange">
@@ -159,9 +249,9 @@ Usage: `<material name="orange"/>`
 
 ---
 
-## link
+# link
 
-- ### simple geometries
+- ## simple geometries
 
 ```xml
 <link name="chassis">
@@ -198,7 +288,7 @@ Usage: `<material name="orange"/>`
 </link>
 ```
 
-- ### `mesh` files
+- ## `mesh` files
 
 ```xml
 <property name="mesh_path" value = "package://my_package/meshes" />
@@ -233,7 +323,7 @@ Multiple `visual` and/or `colision` tags can be specified within the same `link`
 
 ---
 
-## joint
+# joint
 
 ```xml
 <joint name="${prefix}_arm_1_joint" type="revolute"> <!--or continuous for no limits-->
@@ -261,7 +351,7 @@ Otherwise, use `type=continuous`.
 
 ---
 
-## Misc
+# Misc
 
 - Defined arguments/properties are visible in the included xacro files, i.e.:
     ```xml
