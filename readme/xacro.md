@@ -292,6 +292,7 @@ Usage: `<material name="orange"/>`
 
 ```xml
 <property name="mesh_path" value = "package://my_package/meshes" />
+<property name="mesh_path" value = "file://<path_to_meshes_folder>" />
 
 <link name="arm_base">
     <!-- visual -->

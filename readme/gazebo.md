@@ -350,6 +350,11 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
 ---
 
+
+# Calculate inertial of mesh
+
+See [inertial.md](inertial.md)
+
 ## Notes
 
 - `odom` frame tells us where the robot is w.r.t. the initial gazebo pose of the robot.
