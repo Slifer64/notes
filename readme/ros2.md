@@ -190,10 +190,7 @@ ros2 action send_goal /turtle1/rotate_absolute turtlesim/action/RotateAbsolute "
 ```
 ---
 
-# Logs (+ rqt_console)
-```bash
-ros2 run rqt_console rqt_console
-```
+# Logging
 
 ROS 2’s logger levels are ordered by severity:
 ```bash
@@ -206,6 +203,17 @@ Debug # step-by-step details of the system execution
 
 ```bash
 ros2 run turtlesim turtlesim_node --ros-args --log-level WARN # messages of lower priority are not displayed
+```
+
+To print also the file and line number:
+```bash
+export RCUTILS_CONSOLE_OUTPUT_FORMAT="[{severity}] [{name}]: {message} ({function_name}() at {file_name}:{line_number})"
+ros2 run logging_demo logging_demo_main
+```
+
+View and filter logs with `rqt_console`:
+```bash
+ros2 run rqt_console rqt_console
 ```
 ---
 
@@ -551,8 +559,36 @@ Can also use:
 - <h3 id="cpp_py_pkg_cmakelists">Edit <code>CMakeLists.txt</code></h3>
 
   Add the following to `CMakeLists.txt`:
+
   ```cmake
   # Install Python modules
+  find_package(ament_cmake_python REQUIRED)
+  ament_python_install_package(${PROJECT_NAME})
+
+  # Install Python executables
+  set(PY_EXECUTABLES
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/my_exec_node1.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/my_exec_node2.py
+  )
+
+  # make python programs executable (required when building with --symlink-install)
+  file(CHMOD ${PY_EXECUTABLES}
+    PERMISSIONS
+    OWNER_EXECUTE OWNER_WRITE OWNER_READ
+    GROUP_EXECUTE GROUP_READ
+    WORLD_EXECUTE WORLD_READ
+  )
+
+  install(PROGRAMS
+    ${PY_EXECUTABLES}
+    DESTINATION lib/${PROJECT_NAME}
+  )
+  ```
+
+  Alternative way (*deprecated*):
+  ```cmake
+  # Install Python modules
+  find_package(ament_cmake_python REQUIRED)
   ament_python_install_package(${PROJECT_NAME})
 
   # Install Python executables
@@ -734,6 +770,12 @@ ros2 run rviz2 rviz2 -d $(ros2 pkg prefix --share turtle_tf2_py)/rviz/turtle_rvi
 
 ---
 
+# gdb
+
+```bash
+ros2 run --prefix 'gdb -ex run --args' package_name executable_name
+```
+
 # MISC
 
 ## Find package path
@@ -751,3 +793,9 @@ ros2 launch urdf_tutorial display.launch.py model:=`ros2 pkg prefix --share urdf
 ## Migration guide from ROS 1
 
 https://docs.ros.org/en/iron/The-ROS2-Project/Contributing/Migration-Guide.html
+
+
+## See debug messages when running a node
+```bash
+ros2 run <package> <executable> --ros-args --log-level debug
+```

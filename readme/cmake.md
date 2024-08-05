@@ -32,7 +32,7 @@ make
 
 Another way:
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install
 cmake --build build --target install
 ```
 This allows to run cmake from the source directory. It will create the `build` directory and the `--build` tag specifys the path where the build will take place.

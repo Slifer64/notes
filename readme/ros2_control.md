@@ -1,5 +1,68 @@
 # Ros2 control
 
+## CLI
+
+```bash
+ros2 control list_controllers
+ros2 control list_controller_types
+ros2 control list_hardware_interfaces
+```
+
+## Introspection of ros2_control system
+- What controllers are loaded in the system?
+```bash
+ros2 control list_controllers
+```
+- What is the state of the controllers?
+```bash
+ros2 control list_controllers
+```
+- What hardware interfaces are there and in which state?
+```bash
+ros2 service call /controller_manager/list_hardware_components controller_manager_msgs/srv/ListHardwareComponents {}
+```
+- Which interfaces are available?
+```bash
+ros2 control list_hardware_interfaces
+```
+- How can we switch between forward_position_controller and joint_trajectory_controller?
+```bash
+# spawn first the controller you want as `inactive`
+ros2 run controller_manager spawner forward_position_controller --inactive
+# deactivate the current controller and activate the other one
+ros2 control switch_controllers --deactivate joint_trajectory_controller --activate forward_position_controller
+```
+- What happens when you try to run all controllers in parallel?
+```bash
+# See output in the terminal where ros2_control_node is running:
+ros2 control switch_controllers --activate forward_position_controller --activate joint_trajectory_controller
+# You should see something like:
+# [ERROR] [1709822963.333649137] [controller_manager]: Resource conflict for controller 'joint_trajectory_controller'. Command interface 'joint1/position' is already claimed.
+```
+- What interfaces are controllers using?
+```bash
+ros2 control list_controllers -v
+```
+
+## Simulation with Gazebo Classic and Gazebo (Ignition)
+
+ros2_control is integrated with simulators using simulator-specific plugins. Those plugins extend controller manager with simulator-related functionalities and enables loading hardware interfaces that are created specifically for the simulator. Simulators are using description under `<ros2_control>` to setup the interfaces. They are searched for interfaces with standard names, `position`, `velocity` and `effort`, to wire them with the internal simulator-states.
+
+The plugins and interfaces for the simulators are the following:
+
+### Gazebo Classic
+
+- Package: `gazebo_ros2_control`
+- Simulator plugin: `libgazebo_ros2_control.so`
+- HW interface plugin: `gazebo_ros2_control/GazeboSystem`
+
+### Gazebo
+
+- Package: `gz_ros2_control`
+- Simulator plugin: `libign_ros2_control-system.so`
+- HW interface plugin: `ign_ros2_control/IgnitionSystem` (*NOTE* `ign` will be switched to `gz` very soon!)
+
+
 
 ## `Setup`:
 Include in your robot_description xacro:
