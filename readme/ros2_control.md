@@ -25,7 +25,7 @@ ros2 service call /controller_manager/list_hardware_components controller_manage
 ```bash
 ros2 control list_hardware_interfaces
 ```
-- How can we switch between forward_position_controller and joint_trajectory_controller?
+- Switch between forward_position_controller and joint_trajectory_controller?
 ```bash
 # spawn first the controller you want as `inactive`
 ros2 run controller_manager spawner forward_position_controller --inactive
@@ -42,6 +42,93 @@ ros2 control switch_controllers --activate forward_position_controller --activat
 - What interfaces are controllers using?
 ```bash
 ros2 control list_controllers -v
+```
+
+## Hardware Description in URDF (example)
+
+More examples at: \
+https://github.com/ros-controls/roadmap/blob/master/design_drafts/components_architecture_and_urdf_examples.md
+
+```xml
+<!-- multi-DoF hardware component (system: read/write each DoF) -->
+<ros2_control name="RRBotSystemPositionOnly" type="system">
+ <hardware>
+   <plugin>ros2_control_demo_hardware/RRBotSystemPositionOnlyHardware</plugin>
+   <param name="example_param_write_for_sec">2</param>
+   <param name="example_param_read_for_sec">2</param>
+ </hardware>
+ <joint name="joint1">
+   <command_interface name="position">
+     <param name="min">-1</param>
+     <param name="max">1</param>
+   </command_interface>
+   <state_interface name="position"/>
+ </joint>
+ <joint name="joint2">
+   <command_interface name="position">
+     <param name="min">-1</param>
+     <param name="max">1</param>
+   </command_interface>
+   <state_interface name="position"/>
+ </joint>
+ <!-- optionally for integrated sensors 
+  (notite: the <hardware> plugin must be designed to read the integrated sensor data) 
+ -->
+ <sensor name="tcp_fts_sensor">
+    <state_interface name="fx"/>
+    <state_interface name="tz"/>
+    <param name="frame_id">rrbot_tcp</param>
+    <param name="fx_range">100</param>
+    <param name="tz_range">15</param>
+  </sensor>
+</ros2_control>
+
+<!-- sensor hardware component (sensor: read only) -->
+<ros2_control name="RRBotForceTorqueSensor1D" type="sensor">
+ <hardware>
+   <plugin>ros2_control_demo_hardware/ForceTorqueSensor1DHardware</plugin>
+   <param name="example_param_read_for_sec">0.43</param>
+ </hardware>
+ <sensor name="tcp_fts_sensor">
+   <state_interface name="force"/>
+   <param name="frame_id">rrbot_tcp</param>
+   <param name="min_force">-100</param>
+   <param name="max_force">100</param>
+ </sensor>
+</ros2_control>
+
+<!-- 1-DoF hardware component (actuator: [read]/write) -->
+<ros2_control name="RRBotGripper" type="actuator">
+ <hardware>
+   <plugin>ros2_control_demo_hardware/PositionActuatorHardware</plugin>
+   <param name="example_param_write_for_sec">1.23</param>
+   <param name="example_param_read_for_sec">3</param>
+ </hardware>
+ <joint name="gripper_joint ">
+   <command_interface name="position">
+     <param name="min">0</param>
+     <param name="max">50</param>
+   </command_interface>
+   <state_interface name="position"/>
+   <state_interface name="velocity"/>
+ </joint>
+</ros2_control>
+
+<!-- composite sensor -->
+<ros2_control name="CameraWithIMU" type="sensor">
+  <hardware>
+    <plugin>ros2_control_demo_hardware/CameraWithIMUSensor</plugin>
+    <param name="example_param_read_for_sec">2</param>
+  </hardware>
+  <sensor name="sensor1">
+    <state_interface name="roll"/>
+    <state_interface name="pitch"/>
+    <state_interface name="yaw"/>
+  </sensor>
+  <sensor name="sensor2">
+    <state_interface name="image"/>
+  </sensor>
+</ros2_control>
 ```
 
 ## Simulation with Gazebo Classic and Gazebo (Ignition)
@@ -67,28 +154,58 @@ The plugins and interfaces for the simulators are the following:
 ## `Setup`:
 Include in your robot_description xacro:
 ```xml
-<ros2_control name="GazeboSystem" type="system">
-    <hardware>
-        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-    </hardware>
-    <!-- Specify the joints 
-    and the exposed command/state interfaces-->
-    <joint name="left_wheel_joint">
-        <command_interface name="velocity">
-            <param name="min">-10</param>
-            <param name="max">10</param>
-        </command_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="position"/>
-    </joint>
-    <joint name="right_wheel_joint">
-        <command_interface name="velocity">
-            <param name="min">-10</param>
-            <param name="max">10</param>
-        </command_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="position"/>
-    </joint>
+
+<!-- hardware options: [sim, real, gazebo] -->
+<xacro:property name="hardware" value="sim" />
+
+<ros2_control name="MySystem" type="system">
+    
+  <hardware>
+
+    <!-- Mock hardware -->
+    <xacro:if value="${hardware.lower() == 'sim'}">
+      <plugin>mock_components/GenericSystem</plugin>
+      <param name="mock_sensor_commands">${mock_sensor_commands}</param>
+    </xacro:if>
+
+    <!-- physical hardware or Robot simulation studio -->
+    <xacro:if value="${hardware.lower() == 'real'}">
+      <plugin>elite_hardware_interface/EliteSystemHardware</plugin>
+      <param name="dashboard_ip">${dashboard_ip}</param>
+      <param name="local_ip">${local_ip}</param>
+      <param name="reverse_port">${reverse_port}</param>
+      <!-- <param name="...">...</param> -->
+    </xacro:if>
+
+    <!-- Gazebo -->
+    <xacro:if value="${hardware.lower() == 'gazebo'}">
+      <!-- gazebo HardwareInterface plugin -->
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </xacro:if>
+  </hardware>
+
+  <!-- Specify the joints and the exposed command/state interfaces-->
+  <joint name="left_wheel_joint">
+      <!-- <command_interface name="position">
+          <param name="min">-2.5</param>
+          <param name="max">2.5</param>
+      </command_interface> -->
+      <command_interface name="velocity">
+          <param name="min">-10</param>
+          <param name="max">10</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+  </joint>
+  <joint name="right_wheel_joint">
+      <command_interface name="velocity">
+          <param name="min">-10</param>
+          <param name="max">10</param>
+      </command_interface>
+      <state_interface name="velocity"/>
+      <state_interface name="position"/>
+  </joint>
+
 </ros2_control>
 
 <!-- Include the gazebo_ros2_control plugin
@@ -177,6 +294,6 @@ joint_broad:
 
 For more:
 
-https://control.ros.org/master/doc/getting_started/getting_started.html
-
-https://github.com/ros-controls/ros2_control_demos
+- https://control.ros.org/jazzy/doc/getting_started/getting_started.html
+- https://github.com/ros-controls/roadmap/blob/master/design_drafts/
+- https://github.com/ros-controls/ros2_control_demos

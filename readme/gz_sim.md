@@ -15,6 +15,7 @@ sudo apt-get update
 # Clone repository
 git clone https://github.com/gazebosim/gz-sim -b gz-sim<#>
 # Install package dependencies (including other Gazebo libraries):
+cd gz-sim<#>
 sudo apt -y install \
   $(sort -u $(find . -iname 'packages-'`lsb_release -cs`'.apt' -o -iname 'packages.apt' | tr '\n' ' '))
 # Configure and build.
@@ -392,7 +393,22 @@ Gazebo will look for system plugins on the following paths, in order:
 - `$HOME/.gz/sim/plugins`
 - Systems that are installed with Gazebo
 
+## Create plugins
 
+https://gazebosim.org/api/sim/8/createsystemplugins.html
+
+Each `gz::sim::System` is:
+- loaded as plugin at runtime
+- attached and associated with an entity in simulation (entity types: `World`, `Model`, `Sensor`, `Actor`)
+
+Every plugin should inherit `gz::sim::System` and any additional interfaces that need to be implemented:
+- `ISystemConfigure`: runs once at initialization; has read/write access; used to: 
+    - get custom configuration from the SDF file
+    - register events with the event manager
+    - modifying entities and components.
+- `ISystemPreUpdate`: read/write access; runs before every sim step; used e.g. to the set the current controller command.
+- `ISystemPostUpdate`: read access only; runs after the sim step; used e.g. to read sensor values and update controller commands. 
+- `ISystemUpdate`: read-write access; typically for systems that manage physics stepping.
 # Sensors
 
 ```xml
@@ -520,8 +536,8 @@ gz service -s /gazebo/worlds --reqtype gz.msgs.Empty --reptype gz.msgs.StringMsg
 
 # Useful links
 
-- http://sdformat.org/spec?elem=physics&ver=1.11 : Physics settings
 - https://gazebosim.org/api/sim/8/tutorials.html : Tutorials
+- http://sdformat.org/spec?elem=physics&ver=1.11 : Physics settings
 - https://gazebosim.org/libs : Inspect the github source code and examine examples
 - https://dartsim.github.io/ : DART
 - https://www.openrobotics.org/blog/2023/9/26/gazebo-harmonic-released
