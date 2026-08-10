@@ -45,6 +45,7 @@
 | Action                    | Command |
 | ------------------------- | ------- |
 | Delete character          | `x`     |
+| Select and delete text    | `v`+ `→` + `x` |
 | Delete previous character | `X`     |
 | Delete word               | `dw`    |
 | Delete to end of line     | `D`     |
@@ -58,6 +59,8 @@
 | Indent line               | `>>`    |
 | Unindent line             | `<<`    |
 | Auto-indent selected text | `=`     |
+
+**Note**: All delete actions work as "cut". You can then press `p` to paste it.
 
 ---
 
@@ -74,6 +77,10 @@
 | Paste before cursor          | `P`     |
 | Delete and store in register | `d`     |
 | Copy entire file             | `ggVGy` |
+
+**Note**: To copy and paste outside of vim:
+- `v`, then  `→...` to select the text, then `"+y` (`"` tells Vim "I am about to specify a register."), `+` specifies the system clipboard register and `y` copies it. However if you run vim inside tmux this won't work. In this case do the following
+- hold down shift (Bypass Vim & tmux) and move the cursor to select the text, and then `ctrl+shift+c` and paste outside of terminal
 
 ---
 
